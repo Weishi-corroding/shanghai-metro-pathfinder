@@ -13,6 +13,10 @@ build/
 # Claude Code
 .claude/
 
+# C++ generated
+cpp/data/
+cpp/third_party/
+
 # OS
 .DS_Store
 Thumbs.db
