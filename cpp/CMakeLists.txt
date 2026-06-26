@@ -35,6 +35,19 @@ add_executable(build_dataset
 target_link_libraries(build_dataset PRIVATE metro_core)
 
 # ---------------------------------------------------------------------------
+# Executable: web server (REST API + static frontend)
+# ---------------------------------------------------------------------------
+add_executable(metro_server
+    backend/server.cpp
+)
+target_link_libraries(metro_server PRIVATE metro_core)
+target_include_directories(metro_server PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/third_party/cpp-httplib
+    ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+)
+
+# ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 enable_testing()

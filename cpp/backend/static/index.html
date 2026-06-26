@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上海地铁路径规划与运营管理系统</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <span class="logo">🚇</span>
+            <span class="title">上海地铁路径规划与运营管理系统</span>
+        </div>
+        <div class="nav-tabs" id="nav-tabs">
+            <button class="nav-tab active" data-panel="route-panel">路径规划</button>
+            <button class="nav-tab" data-panel="status-panel">运营管理</button>
+            <button class="nav-tab" data-panel="analysis-panel">网络分析</button>
+        </div>
+        <div class="nav-stats" id="nav-stats">
+            <span class="stat-badge">站点: <strong id="stat-stations">--</strong></span>
+            <span class="stat-badge">线路: <strong id="stat-lines">--</strong></span>
+            <span class="stat-badge">关闭: <strong id="stat-closed">--</strong></span>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar" id="sidebar">
+            <!-- Route Panel -->
+            <div class="panel active" id="route-panel">
+                <h3>路径规划</h3>
+                <div class="form-group">
+                    <label for="src-input">起点站</label>
+                    <div class="search-wrapper">
+                        <input type="text" id="src-input" placeholder="输入站名搜索..." autocomplete="off">
+                        <div class="search-results" id="src-results"></div>
+                    </div>
+                    <div class="selected-station" id="src-selected"></div>
+                </div>
+                <div class="form-group">
+                    <label for="dst-input">终点站</label>
+                    <div class="search-wrapper">
+                        <input type="text" id="dst-input" placeholder="输入站名搜索..." autocomplete="off">
+                        <div class="search-results" id="dst-results"></div>
+                    </div>
+                    <div class="selected-station" id="dst-selected"></div>
+                </div>
+                <div class="form-group">
+                    <label>算法选择</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="algo" value="shortest-time" checked> 最短时间
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="algo" value="min-transfers"> 最少换乘
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>路径数量</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="k" value="1" checked> 1 条
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="k" value="3"> 3 条
+                        </label>
+                    </div>
+                </div>
+                <button class="btn-primary" id="btn-plan">🚇 规划路径</button>
+                <div class="route-results" id="route-results"></div>
+            </div>
+
+            <!-- Status Panel -->
+            <div class="panel" id="status-panel">
+                <h3>运营状态管理</h3>
+                <div class="form-group">
+                    <label>筛选线路</label>
+                    <select id="status-line-filter"><option value="">全部线路</option></select>
+                </div>
+                <div class="form-group">
+                    <label>筛选状态</label>
+                    <select id="status-filter">
+                        <option value="all">全部</option>
+                        <option value="open">开启</option>
+                        <option value="closed">关闭</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status-search">搜索站名</label>
+                    <input type="text" id="status-search" placeholder="输入关键词筛选...">
+                </div>
+                <div class="status-actions">
+                    <button class="btn-secondary" id="btn-restore-all">🔄 恢复全部站点</button>
+                    <label class="btn-secondary file-upload-btn">
+                        📂 批量更新 (CSV)
+                        <input type="file" id="batch-csv-input" accept=".csv" hidden>
+                    </label>
+                </div>
+                <div class="station-list" id="station-list"></div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="panel" id="analysis-panel">
+                <h3>网络分析</h3>
+                <section class="analysis-section">
+                    <h4>受影响区域分析</h4>
+                    <p class="hint">分析关闭某个站点后，哪些周边站点会受到影响</p>
+                    <div class="search-wrapper">
+                        <input type="text" id="analysis-station-input" placeholder="输入站名搜索..." autocomplete="off">
+                        <div class="search-results" id="analysis-station-results"></div>
+                    </div>
+                    <div class="selected-station" id="analysis-station-selected"></div>
+                    <div class="form-group">
+                        <label for="bfs-depth">BFS 深度</label>
+                        <input type="range" id="bfs-depth" min="1" max="5" value="2">
+                        <span class="range-value" id="bfs-depth-label">2</span>
+                    </div>
+                    <button class="btn-primary" id="btn-affected-area">🔍 分析影响范围</button>
+                    <div class="analysis-result" id="affected-result"></div>
+                </section>
+                <hr>
+                <section class="analysis-section">
+                    <h4>连通分量分析</h4>
+                    <p class="hint">检测地铁网络是否因站点关闭而分裂</p>
+                    <button class="btn-primary" id="btn-components">🔗 计算连通分量</button>
+                    <div class="analysis-result" id="components-result"></div>
+                </section>
+            </div>
+        </aside>
+
+        <main class="map-container" id="map-container">
+            <svg id="metro-map"></svg>
+            <div class="map-tooltip" id="map-tooltip"></div>
+            <div class="map-legend" id="map-legend"></div>
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="spinner"></div>
+                <span>计算中...</span>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/d3.v7.min.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>

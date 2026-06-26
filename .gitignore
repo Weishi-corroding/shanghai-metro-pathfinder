@@ -15,7 +15,7 @@ build/
 
 # C++ generated
 cpp/data/
-cpp/third_party/
+# cpp/third_party/ — vendored headers are committed (httplib, nlohmann)
 
 # OS
 .DS_Store
