@@ -223,6 +223,43 @@ def fill_missing_adjacent_edges(
     return filled
 
 
+def remove_loop_closure_edges(
+    edges: list[dict],
+    stations: list[dict],
+) -> list[dict]:
+    """过滤环线闭合伪边。
+
+    4 号线等环线在 API 数据中首尾站同名（如 0401=上海体育馆, 0426=上海体育馆），
+    首尾之间的边 time=2min 实际是首班车间隔差而非真实站间耗时，
+    不应参与路径规划。规则：同线路、同名站之间的边 → 删除。
+    """
+    # 构建 ID → (name, line) 映射
+    info: dict[str, tuple[str, str]] = {}
+    for s in stations:
+        info[s["station_id"]] = (s["station_name"], s["line"])
+
+    removed = 0
+    filtered: list[dict] = []
+    for e in edges:
+        # 跳过换乘边
+        if e["line"] == "换乘":
+            filtered.append(e)
+            continue
+
+        from_info = info.get(e["from_id"])
+        to_info = info.get(e["to_id"])
+        if from_info and to_info:
+            # 同线路 + 同名站 → 环线闭合伪边
+            if from_info[0] == to_info[0] and from_info[1] == to_info[1]:
+                removed += 1
+                continue
+        filtered.append(e)
+
+    if removed:
+        print(f"[过滤] 移除 {removed} 条环线闭合伪边")
+    return filtered
+
+
 def build_transfer_edges(stations: list[dict]) -> list[dict]:
     """根据同名跨线站点构建换乘边。
 
@@ -321,6 +358,9 @@ def main() -> None:
     # 2.5 补全缺失的邻接边
     filled_edges = fill_missing_adjacent_edges(stations, interval_edges)
     print(f"      补全后区间边: {len(filled_edges)} 条")
+
+    # 2.6 过滤环线闭合伪边（同名站同线路的边）
+    filled_edges = remove_loop_closure_edges(filled_edges, stations)
 
     transfer_edges = build_transfer_edges(stations)
     print(f"      换乘边构建完成: {len(transfer_edges)} 条")

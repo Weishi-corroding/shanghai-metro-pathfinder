@@ -44,7 +44,7 @@ class PathResult:
         total_time     总耗时（分钟，含换乘惩罚）
         transfer_count 换乘次数
         transfer_at    换乘点 [(站名, 从线路, 到线路), ...]
-        line4_dirs     4 号线区间标记 {(站名): "外圈"|"内圈", ...}
+        line4_dirs     4 号线区间标记 {(站点ID): "外圈"|"内圈", ...}
         valid          是否有效路径
         error          无效时的错误说明
     """
@@ -117,14 +117,13 @@ def _rebuild_path(end: str, came_from: dict,
             # 如果这条非换乘边紧接着换乘边，它的线路与前一条非换乘边的线路比较
             line_trace.append((path_ids[i - 1], edge.line, sname))
 
-            # 4 号线方向标记
+            # 4 号线方向标记（key=站点ID，避免环线同名站冲突）
             if "4号线" in edge.line and edge.direction:
-                station_out = station_mgr.get(path_ids[i])
-                if station_out:
-                    if LINE4_INNER in edge.direction:
-                        result.line4_dirs[station_out.name] = "内圈"
-                    elif LINE4_OUTER in edge.direction:
-                        result.line4_dirs[station_out.name] = "外圈"
+                target_id = path_ids[i]
+                if LINE4_INNER in edge.direction:
+                    result.line4_dirs[target_id] = "内圈"
+                elif LINE4_OUTER in edge.direction:
+                    result.line4_dirs[target_id] = "外圈"
 
     result.total_time = total_time
 
@@ -616,8 +615,8 @@ def format_path(result: PathResult, station_mgr: StationManager,
 
         # 标记线路
         line_tag = f"({line})" if line else ""
-        # 4 号线方向标记
-        l4_dir = result.line4_dirs.get(name, "")
+        # 4 号线方向标记（用站点ID查找，避免环线同名站标错）
+        l4_dir = result.line4_dirs.get(sid, "")
         if l4_dir:
             line_tag = f"({line}{l4_dir})"
 
