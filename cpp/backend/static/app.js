@@ -592,8 +592,8 @@ function drawStations(gMap, layoutData, stationsData) {
     });
     // X marks on closed
     [...regular, ...transfer].filter(d=>closedIds.has(d.id)).forEach(d => {
-        gMap.append('line').attr('x1',d.x-5).attr('y1',d.y-5).attr('x2',d.x+5).attr('y2',d.y+5).attr('stroke','#e74c3c').attr('stroke-width',1.5);
-        gMap.append('line').attr('x1',d.x+5).attr('y1',d.y-5).attr('x2',d.x-5).attr('y2',d.y+5).attr('stroke','#e74c3c').attr('stroke-width',1.5);
+        gMap.append('line').attr('class','station-closed-x').attr('x1',d.x-5).attr('y1',d.y-5).attr('x2',d.x+5).attr('y2',d.y+5).attr('stroke','#e74c3c').attr('stroke-width',1.5);
+        gMap.append('line').attr('class','station-closed-x').attr('x1',d.x+5).attr('y1',d.y-5).attr('x2',d.x-5).attr('y2',d.y+5).attr('stroke','#e74c3c').attr('stroke-width',1.5);
     });
 }
 
@@ -1451,7 +1451,14 @@ async function refreshAll() {
         document.getElementById('stat-closed').textContent = stations.filter(s=>!s.is_open).length;
         if(state.activePanel==='status-panel') await loadStationList();
         if(state.gMap){
-            state.gMap.selectAll('.map-station,.map-label,line').remove();
+            // Only remove elements that change with station status - NEVER remove metro lines!
+            // .map-line and .map-line-casing are permanent topological subway line edges
+            state.gMap.selectAll(
+                '.map-station,.map-label,' +
+                '.map-route-edge,.map-route-glow,.map-transfer-marker,' +
+                '.map-affected-station,.map-component-mark,' +
+                '.station-closed-x'
+            ).remove();
             drawStations(state.gMap, state.activeLayout, state.stations);
             drawLabels(state.gMap, state.activeLayout);
             applyTuning(state.currentK);
