@@ -59,11 +59,6 @@ const DEFAULT_TUNING = {
     saMajorAnchor: 8.0,       // anchor weight multiplier for major (transfer) labels
     saNormalAnchor: 1.0,      // anchor weight multiplier for normal labels
     saTimeoutMs: 600,         // hard time limit for SA execution
-    // --- Octilinear Schematic Layout ---
-    octiIterations: 60,       // layout relaxation passes
-    octiMinDist: 14,          // minimum station separation (px)
-    octiGeoWeight: 0.15,      // geographic anchor weight (0=free, 1=locked)
-    octiAngleSnap: 22.5,      // snap angle threshold for octilinear alignment (deg)
 };
 
 // Panel definitions — drives slider rendering. `section` starts a new group.
@@ -92,10 +87,6 @@ const TUNING_DEFS = [
     {                              key: 'saMajorAnchor',      label: '换乘锚权重',      min: 0.2,  max: 100,   step: 0.5 },
     {                              key: 'saNormalAnchor',     label: '普通锚权重',      min: 0.1,  max: 50,    step: 0.1 },
     {                              key: 'saTimeoutMs',        label: '超时 ms',         min: 50,   max: 10000, step: 50 },
-    { section: '八边示意图',      key: 'octiIterations',     label: '松弛迭代次数',    min: 0,    max: 300,   step: 5, redraw: true },
-    {                              key: 'octiMinDist',        label: '最小站距 px',     min: 2,    max: 100,   step: 1, redraw: true },
-    {                              key: 'octiGeoWeight',      label: '地理锚定权重',    min: 0,    max: 1,     step: 0.01, redraw: true },
-    {                              key: 'octiAngleSnap',      label: '角度吸附阈值°',   min: 1,    max: 90,    step: 0.5, redraw: true },
 ];
 
 function loadTuning() {
@@ -121,41 +112,7 @@ const LINE_COLORS = {
 // Geometry utilities for octilinear layout
 // ============================================================================
 
-/**
- * Calculate bearing between two WGS84 lat/lng points, in degrees.
- * Returns bearing from point A to point B, 0° = North, increasing clockwise.
- */
-function bearing(lat1, lng1, lat2, lng2) {
-    const rad = Math.PI / 180;
-    const dLng = (lng2 - lng1) * rad;
-    const y = Math.sin(dLng) * Math.cos(lat2 * rad);
-    const x = Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
-              Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLng);
-    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-
-/**
- * Snap an angle in degrees to the nearest octilinear direction (0°, 45°, ..., 315°).
- * Returns snapped angle in degrees.
- */
-function snapToOctilinear(angleDeg, thresholdDeg) {
-    // Octilinear directions: 0, 45, 90, 135, 180, 225, 270, 315
-    const octiDirs = [0, 45, 90, 135, 180, 225, 270, 315];
-    let best = octiDirs[0];
-    let minDiff = Infinity;
-    for (const dir of octiDirs) {
-        // Handle wrap-around at 0/360
-        let diff = Math.abs(angleDeg - dir);
-        if (diff > 180) diff = 360 - diff;
-        if (diff < minDiff) {
-            minDiff = diff;
-            best = dir;
-        }
-    }
-    // Only snap if within threshold
-    return minDiff <= thresholdDeg ? best : angleDeg;
-}
-
+// Octilinear layout is precomputed in Python — no frontend geometry functions needed!
 // ============================================================================
 // API Helpers
 // ============================================================================
@@ -288,25 +245,21 @@ function renderRouteResults() {
 // D3 Map
 // ============================================================================
 async function initMap() {
-    const [layoutData, stationsData, linesData, coordsData] = await Promise.all([
+    const [layoutData, octiLayoutData, stationsData, linesData, coordsData] = await Promise.all([
         apiGet('/api/layout'),
+        fetch('/octilinear.json').then(r => r.json()).catch(() => null),
         apiGet('/api/stations'),
         apiGet('/api/lines'),
         fetch('/station_coords.json').then(r => r.json()).catch(() => null)
     ]);
     state.layout = layoutData;
+    state.octiLayout = octiLayoutData; // Precomputed schematic layout (no runtime computation!)
     state.stations = stationsData;
     state.lines = linesData;
     state.rawCoords = coordsData;
     state.activeLayout = state.layout;
-    state.octiLayout = null;
+    state.layoutMode = 'geo'; // Start with geographic layout (fast)
 
-    // Restore saved layout mode
-    if (state.tuning && state.tuning.layoutMode === 'octilinear') {
-        state.layoutMode = 'octilinear';
-        state.octiLayout = computeOctilinearLayout();
-        if (state.octiLayout) state.activeLayout = state.octiLayout;
-    }
     stationsData.forEach(s => { state.stationMap[s.id] = s; });
     document.getElementById('stat-stations').textContent = stationsData.length;
     document.getElementById('stat-lines').textContent = linesData.length;
@@ -322,13 +275,6 @@ async function initMap() {
     state.gMap = gMap;
 
     state.tuning = loadTuning();
-
-    // If octilinear mode is saved and we have raw coords, compute schematic
-    // before drawing so lines go through the new station positions
-    if (state.tuning.layoutMode === 'octilinear' && !state.octiLayout && state.rawCoords) {
-        state.octiLayout = computeOctilinearLayout();
-        if (state.octiLayout) state.activeLayout = state.octiLayout;
-    }
 
     // OPTIMIZATION: RAF-based zoom event coalescing to prevent layout thrashing
     let _zoomRAF = 0;
@@ -521,12 +467,11 @@ function scheduleCollisionSettle() {
     if (state._settleTimer) clearTimeout(state._settleTimer);
     const t = state.tuning || DEFAULT_TUNING;
     state._settleTimer = setTimeout(() => {
-        // If SA completed successfully, no need to re-run collision on zoom settle.
-        // SA positions are in layout coords, scale uniformly with zoom transform.
-        if (t.useSA && state.sa.completed && state.sa.positions.size > 0) {
-            return;
+        if (state.gMap) {
+            // Always run collision resolve after zoom settle.
+            // If SA completed, it will just apply stored positions and run collision hiding.
+            resolveLabelCollisions(state.gMap);
         }
-        if (state.gMap) resolveLabelCollisions(state.gMap);
         state._settleTimer = null;
     }, t.settleDelay);
 }
@@ -585,10 +530,10 @@ function drawStations(gMap, layoutData, stationsData) {
         (pos.is_transfer?transfer:regular).push({id,...pos});
     }
     regular.forEach(d => {
-        gMap.append('circle').attr('class',`map-station regular ${closedIds.has(d.id)?'closed':''}`).attr('data-base-r',5).attr('data-line',d.line).attr('cx',d.x).attr('cy',d.y).attr('r',5).attr('fill',closedIds.has(d.id)?'#555':(d.color||'#666')).attr('stroke','rgba(255,255,255,0.3)').attr('stroke-width',1).attr('data-id',d.id).on('click',(e,d)=>onStationClick(d.id)).on('mouseenter',(e,d)=>onStationHover(d.id,e)).on('mouseleave',onStationLeave);
+        gMap.append('circle').datum(d).attr('class',`map-station regular ${closedIds.has(d.id)?'closed':''}`).attr('data-base-r',5).attr('data-line',d.line).attr('cx',d.x).attr('cy',d.y).attr('r',5).attr('fill',closedIds.has(d.id)?'#555':(d.color||'#666')).attr('stroke','rgba(255,255,255,0.3)').attr('stroke-width',1).attr('data-id',d.id).on('click',(e,d)=>onStationClick(d.id)).on('mouseenter',(e,d)=>onStationHover(d.id,e)).on('mouseleave',onStationLeave);
     });
     transfer.forEach(d => {
-        gMap.append('circle').attr('class',`map-station transfer ${closedIds.has(d.id)?'closed':''}`).attr('data-base-r',8).attr('data-line',d.line).attr('cx',d.x).attr('cy',d.y).attr('r',8).attr('fill','#fff').attr('stroke',closedIds.has(d.id)?'#555':(d.color||'#666')).attr('stroke-width',3).attr('data-id',d.id).on('click',(e,d)=>onStationClick(d.id)).on('mouseenter',(e,d)=>onStationHover(d.id,e)).on('mouseleave',onStationLeave);
+        gMap.append('circle').datum(d).attr('class',`map-station transfer ${closedIds.has(d.id)?'closed':''}`).attr('data-base-r',8).attr('data-line',d.line).attr('cx',d.x).attr('cy',d.y).attr('r',8).attr('fill','#fff').attr('stroke',closedIds.has(d.id)?'#555':(d.color||'#666')).attr('stroke-width',3).attr('data-id',d.id).on('click',(e,d)=>onStationClick(d.id)).on('mouseenter',(e,d)=>onStationHover(d.id,e)).on('mouseleave',onStationLeave);
     });
     // X marks on closed
     [...regular, ...transfer].filter(d=>closedIds.has(d.id)).forEach(d => {
@@ -740,10 +685,10 @@ function runGreedyCollision(gMap) {
         const bx = +(el.getAttribute('data-base-x')) || 0;
         const by = +(el.getAttribute('data-base-y')) || 0;
         let priority;
-        if (tier === 'major') priority = 4;
-        else if (tier === 'medium') priority = 3;
-        else if (tier === 'normal-sparse') priority = 2;
-        else priority = 1;
+        if (tier === 'major') priority = 4;        // 换乘站 - 最高优先级
+        else if (tier === 'medium') priority = 3;  // 终点站 - 高优先级
+        else if (tier === 'normal-sparse') priority = 2;  // 稀疏普通站
+        else priority = 1;  // 密集普通站 - 最低优先级
         items.push({
             el, tier, priority,
             baseX: bx, baseY: by,
@@ -751,10 +696,13 @@ function runGreedyCollision(gMap) {
         });
     });
 
-    // --- Step 2: sort by priority (highest first) ---
-    items.sort((a, b) => b.priority - a.priority);
+    // --- Step 2: sort by priority (highest first), then by name for stability ---
+    items.sort((a, b) => {
+        if (b.priority !== a.priority) return b.priority - a.priority;
+        return a.el.textContent.localeCompare(b.el.textContent);
+    });
 
-    // --- Step 3: greedy placement ---
+    // --- Step 3: greedy placement with collision-based hiding ---
     // Simple spatial hash for O(1) collision queries against placed labels.
     const cellSize = 40;
     const grid = new Map();  // key = "cx,cy" → [item, ...]
@@ -789,26 +737,31 @@ function runGreedyCollision(gMap) {
         grid.get(key).push(item);
     }
 
-    // Offsets to try: right, up-right, down-right, up, down (screen-direction order)
-    const OFFSETS = [
-        [8, 0], [10, -6], [10, 6], [0, -10], [0, 10],
-        [14, 0], [14, -10], [14, 10],
-    ];
+    // Minimal offsets for major/medium tiers - prefer clean label positions over
+    // complex offset arrangements that clutter the map.
+    const MINIMAL_OFFSETS = [[8, 0], [0, -8], [0, 8]];
 
     for (const item of items) {
         const bx = item.baseX, by = item.baseY;
 
-        // Try base position first.
+        // Try base position first (cleanest layout).
         if (!collidesWithPlaced(item, bx, by)) {
             placeItem(item, bx, by);
             d3.select(item.el).attr('x', bx).attr('y', by);
             continue;
         }
 
+        // COLLISION STRATEGY: Prioritize important stations, hide secondary ones.
+        // - Major (transfer): try offsets, always show (critical landmarks)
+        // - Medium (terminus): try offsets, hide if still collides
+        // - Normal-sparse: try a few offsets (outer area should have space)
+        // - Normal-dense: hide immediately (inner-city stations only visible at high zoom)
+
         if (item.tier === 'major') {
-            // Transfer labels MUST be visible — try offsets aggressively.
+            // Transfer stations are critical navigation anchors - must show.
+            // Try reasonable offsets to avoid collision, accept overlap if needed.
             let placed = false;
-            for (const [ox, oy] of OFFSETS) {
+            for (const [ox, oy] of MINIMAL_OFFSETS) {
                 const tx = bx + ox, ty = by + oy;
                 if (!collidesWithPlaced(item, tx, ty)) {
                     placeItem(item, tx, ty);
@@ -818,14 +771,30 @@ function runGreedyCollision(gMap) {
                 }
             }
             if (!placed) {
-                // Give up — render at base, accept overlap (better than hiding a transfer).
+                // Show at base position even with overlap - better than hiding a transfer.
                 placeItem(item, bx, by);
                 d3.select(item.el).attr('x', bx).attr('y', by);
             }
         } else if (item.tier === 'medium') {
-            // Terminus labels — try a few offsets, hide if none work.
+            // Terminus stations - try all minimal offsets before hiding.
             let placed = false;
-            for (const [ox, oy] of OFFSETS.slice(0, 4)) {
+            for (const [ox, oy] of MINIMAL_OFFSETS) {
+                const tx = bx + ox, ty = by + oy;
+                if (!collidesWithPlaced(item, tx, ty)) {
+                    placeItem(item, tx, ty);
+                    d3.select(item.el).attr('x', tx).attr('y', ty);
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) {
+                d3.select(item.el).classed('collision-off', true);
+            }
+        } else if (item.tier === 'normal-sparse') {
+            // Sparse-area normal stations - try a few offsets before hiding.
+            // These are in outer areas with more available space.
+            let placed = false;
+            for (const [ox, oy] of MINIMAL_OFFSETS.slice(0, 2)) {
                 const tx = bx + ox, ty = by + oy;
                 if (!collidesWithPlaced(item, tx, ty)) {
                     placeItem(item, tx, ty);
@@ -838,9 +807,86 @@ function runGreedyCollision(gMap) {
                 d3.select(item.el).classed('collision-off', true);
             }
         } else {
-            // Normal labels (sparse + dense) — hide on first collision.
+            // Dense-area normal stations - hide immediately on collision.
+            // These should only become visible at higher zoom levels anyway.
             d3.select(item.el).classed('collision-off', true);
         }
+    }
+}
+
+// ============================================================================
+// Collision-based label hiding - shared by both greedy and SA placement.
+// Hides lower-priority labels that collide with already placed (higher priority)
+// labels. This is the core strategy: prefer important stations, hide secondary ones.
+// ============================================================================
+function applyCollisionHiding(gMap) {
+    const t = state.tuning || DEFAULT_TUNING;
+    gMap.selectAll('.map-label.collision-off').classed('collision-off', false);
+
+    // Only process labels that are visible (not tier-hidden)
+    const allLabels = gMap.selectAll('.map-label:not(.tier-off)');
+    if (allLabels.empty()) return;
+
+    const items = [];
+    const pad = t.collisionPadding;
+
+    allLabels.each(function () {
+        const el = this;
+        const tier = el.getAttribute('data-tier') || 'normal-sparse';
+        // Use cached bbox if available
+        let cachedW = el.getAttribute('data-bbox-w');
+        let cachedH = el.getAttribute('data-bbox-h');
+        let bbox;
+        if (cachedW && cachedH) {
+            bbox = { width: +cachedW, height: +cachedH };
+        } else {
+            bbox = el.getBBox();
+            el.setAttribute('data-bbox-w', bbox.width);
+            el.setAttribute('data-bbox-h', bbox.height);
+        }
+        const x = +(el.getAttribute('x')) || 0;
+        const y = +(el.getAttribute('y')) || 0;
+        let priority;
+        if (tier === 'major') priority = 4;
+        else if (tier === 'medium') priority = 3;
+        else if (tier === 'normal-sparse') priority = 2;
+        else priority = 1;
+        items.push({ el, tier, priority, x, y, w: bbox.width + pad, h: bbox.height + pad });
+    });
+
+    // Sort by priority (highest first) - this ensures that when we encounter
+    // a collision, the label we're checking has lower or equal priority to
+    // any already placed label.
+    items.sort((a, b) => {
+        if (b.priority !== a.priority) return b.priority - a.priority;
+        return a.el.textContent.localeCompare(b.el.textContent);
+    });
+
+    const placed = [];
+
+    function collides(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x &&
+               a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    for (const item of items) {
+        // Check collision with any already placed (higher or equal priority) label
+        const hasCollision = placed.some(p => collides(item, p));
+
+        if (hasCollision) {
+            // COLLISION STRATEGY:
+            // - Major (transfer): ALWAYS show, even if overlapping (critical landmarks)
+            // - Medium (terminus): HIDE on collision (less critical than transfers)
+            // - Normal (sparse/dense): ALWAYS hide on collision (secondary stations)
+            if (item.tier !== 'major') {
+                // Hide medium and normal tier labels that collide with higher-priority labels
+                d3.select(item.el).classed('collision-off', true);
+                continue;
+            }
+            // For major tier, accept overlap and continue to place it anyway
+        }
+
+        placed.push(item);
     }
 }
 
@@ -951,6 +997,7 @@ function runLabelerSA(gMap) {
 
             console.log(`[SA] Completed in ${Math.round(performance.now() - startTime)}ms, ${state.sa.positions.size} labels placed`);
             applySALabels(gMap);
+            // SA already optimizes positions to avoid collisions - no additional hiding needed
         });
     }
 
@@ -983,6 +1030,8 @@ function resolveLabelCollisions(gMap) {
 
     if (state.sa.completed && state.sa.positions.size > 0) {
         applySALabels(gMap);
+        // Hide colliding labels based on their current SA-optimized positions
+        applyCollisionHiding(gMap);
         return;
     }
 
@@ -990,151 +1039,22 @@ function resolveLabelCollisions(gMap) {
 }
 
 // ============================================================================
-// Octilinear Schematic Layout Engine
-// Transforms geographic coordinates into a clean schematic-style map where
-// lines align to 0°/45°/90°/etc directions. Uses iterative relaxation.
+// Octilinear schematic layout is PRECOMPUTED in Python (scripts/generate_layout.py)
+// and loaded from /octilinear.json at startup. No frontend computation needed!
+// This eliminates the performance freeze that occurred when switching layouts.
 // ============================================================================
-
-function computeOctilinearLayout() {
-    // Always compute from the original geographic layout, not the current active layout
-    if (!state.layout || !state.layout.stations) return null;
-
-    const t = state.tuning || DEFAULT_TUNING;
-    const ly = state.layout;
-    const stations = ly.stations;
-    const ids = Object.keys(stations);
-    const startTime = performance.now();
-
-    // Build station index map: id → array index
-    const idx = {};
-    ids.forEach((id, i) => idx[id] = i);
-
-    // Build edge list: [fromStationIdx, toStationIdx]
-    const edges = [];
-    for (const [lineName, lineInfo] of Object.entries(ly.lines)) {
-        for (const seg of lineInfo.segments || []) {
-            const a = idx[seg[0]], b = idx[seg[1]];
-            if (a !== undefined && b !== undefined) {
-                edges.push([a, b]);
-            }
-        }
-    }
-
-    // Step 1: Initialize schematic positions from geographic positions
-    // pos[i] = {x, y} in layout coordinates
-    const pos = ids.map(id => ({
-        x: stations[id].x,
-        y: stations[id].y,
-    }));
-
-    // Step 2: Precompute target octilinear directions for every edge
-    // targetDir[i][j] = snapped bearing from station i to station j
-    const targetDir = Array(ids.length).fill(0).map(() => ({}));
-    for (const [a, b] of edges) {
-        const idA = ids[a], idB = ids[b];
-        let angle;
-        if (state.rawCoords && state.rawCoords[idA] && state.rawCoords[idB]) {
-            // Use true geographic bearing if available
-            angle = bearing(
-                state.rawCoords[idA].lat, state.rawCoords[idA].lng,
-                state.rawCoords[idB].lat, state.rawCoords[idB].lng
-            );
-        } else {
-            // Fallback: use projected coordinates bearing
-            const dx = stations[idB].x - stations[idA].x;
-            const dy = stations[idB].y - stations[idA].y;
-            angle = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
-        }
-        const snapped = snapToOctilinear(angle, t.octiAngleSnap);
-        targetDir[a][b] = snapped * Math.PI / 180;
-        // Reverse direction for b→a
-        targetDir[b][a] = ((snapped + 180) % 360) * Math.PI / 180;
-    }
-
-    // Step 3: Iterative relaxation
-    for (let iter = 0; iter < t.octiIterations; iter++) {
-        const newPos = pos.map(p => ({ x: p.x * t.octiGeoWeight, y: p.y * t.octiGeoWeight }));
-        const neighborCount = Array(ids.length).fill(t.octiGeoWeight);
-
-        // Direction constraint: pull each station along the octilinear direction
-        // dictated by each neighbor
-        for (const [a, b] of edges) {
-            const dist = Math.sqrt(
-                Math.pow(pos[b].x - pos[a].x, 2) +
-                Math.pow(pos[b].y - pos[a].y, 2)
-            ) || 1;
-
-            const dir = targetDir[a][b];
-            if (dir !== undefined) {
-                // Station a is pulled in dir direction towards station b
-                newPos[a].x += (pos[a].x + Math.cos(dir) * dist) * (1 - t.octiGeoWeight);
-                newPos[a].y += (pos[a].y + Math.sin(dir) * dist) * (1 - t.octiGeoWeight);
-                neighborCount[a] += (1 - t.octiGeoWeight);
-
-                // Station b is pulled in reverse direction
-                const revDir = targetDir[b][a];
-                newPos[b].x += (pos[b].x + Math.cos(revDir) * dist) * (1 - t.octiGeoWeight);
-                newPos[b].y += (pos[b].y + Math.sin(revDir) * dist) * (1 - t.octiGeoWeight);
-                neighborCount[b] += (1 - t.octiGeoWeight);
-            }
-        }
-
-        // Normalize by neighbor count
-        for (let i = 0; i < ids.length; i++) {
-            if (neighborCount[i] > 0) {
-                newPos[i].x /= neighborCount[i];
-                newPos[i].y /= neighborCount[i];
-            }
-        }
-
-        // Repulsion: push apart stations that are too close
-        const repulseFactor = 0.15;
-        for (let i = 0; i < ids.length; i++) {
-            for (let j = i + 1; j < ids.length; j++) {
-                const dx = newPos[j].x - newPos[i].x;
-                const dy = newPos[j].y - newPos[i].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < t.octiMinDist && dist > 0.001) {
-                    const f = (t.octiMinDist - dist) / dist * repulseFactor;
-                    const fx = dx * f, fy = dy * f;
-                    newPos[i].x -= fx;
-                    newPos[i].y -= fy;
-                    newPos[j].x += fx;
-                    newPos[j].y += fy;
-                }
-            }
-        }
-
-        // Copy back
-        for (let i = 0; i < ids.length; i++) {
-            pos[i] = newPos[i];
-        }
-    }
-
-    // Step 4: Build output layout object
-    const octiStations = {};
-    for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        octiStations[id] = { ...stations[id], x: Math.round(pos[i].x * 10) / 10, y: Math.round(pos[i].y * 10) / 10 };
-    }
-
-    console.log(`[Octilinear] Computed schematic layout in ${Math.round(performance.now() - startTime)}ms`);
-    return { ...ly, stations: octiStations };
-}
 
 /**
  * Switch between geographic and schematic octilinear layout modes.
- * Invalidates SA positions and redraws everything.
+ * Layouts are precomputed in Python — no expensive frontend computation!
  */
 function setLayoutMode(mode) {
     if (!state.layout) return;
     state.layoutMode = mode;
     if (state.tuning) state.tuning.layoutMode = mode;
 
-    if (mode === 'octilinear') {
-        if (!state.octiLayout) {
-            state.octiLayout = computeOctilinearLayout();
-        }
+    // Use precomputed layout (loaded from octilinear.json in initMap)
+    if (mode === 'octilinear' && state.octiLayout) {
         state.activeLayout = state.octiLayout;
     } else {
         state.activeLayout = state.layout;
@@ -1144,21 +1064,30 @@ function setLayoutMode(mode) {
     state.sa.completed = false;
     state.sa.positions.clear();
 
-    // Full redraw
+    // Full redraw - layout mode changes coordinates, so everything must be redrawn
     const g = state.gMap;
     if (g) {
-        g.selectAll('.map-line, .map-line-casing, .map-station, .map-label, line').remove();
+        clearRouteHighlight();
+        g.selectAll('.map-line, .map-line-casing, .map-station, .map-label, .station-closed-x').remove();
         drawLines(g, state.activeLayout);
         drawStations(g, state.activeLayout, state.stations);
         drawLabels(g, state.activeLayout);
         applyTuning(state.currentK);
-        if (state.tuning?.useSA) runLabelerSA(g);
-        else resolveLabelCollisions(g);
+        // For octilinear layout, use simpler greedy collision resolution
+        // instead of full SA - much faster and sufficient for schematic view
+        if (state.layoutMode === 'octilinear') {
+            runGreedyCollision(g);
+        } else if (state.tuning?.useSA) {
+            runLabelerSA(g);
+        } else {
+            resolveLabelCollisions(g);
+        }
 
         // Re-highlight current route if any
         if (state.routeResults.length > 0 && state.highlightedPath !== null) {
             highlightRouteOnMap(state.highlightedPath);
         }
+        initLineFocus(g);
         updateMapSelection();
     }
 
@@ -1462,6 +1391,8 @@ async function refreshAll() {
             drawStations(state.gMap, state.activeLayout, state.stations);
             drawLabels(state.gMap, state.activeLayout);
             applyTuning(state.currentK);
+            // Reset SA completed flag so labels get properly re-positioned after DOM recreation
+            state.sa.completed = false;
             scheduleCollisionSettle();
             updateMapSelection();
         }
@@ -1530,21 +1461,9 @@ function initTuningPanel() {
                 (def.key === 'collisionPadding');
 
             if (def.redraw && state.gMap && state.layout) {
-                // octi parameters: recompute schematic layout + full redraw
-                if (def.key.startsWith('octi') && state.layoutMode === 'octilinear') {
-                    state.octiLayout = computeOctilinearLayout();
-                    if (state.octiLayout) {
-                        state.activeLayout = state.octiLayout;
-                        state.gMap.selectAll('.map-line, .map-line-casing, .map-station, .map-label, line').remove();
-                        drawLines(state.gMap, state.activeLayout);
-                        drawStations(state.gMap, state.activeLayout, state.stations);
-                        drawLabels(state.gMap, state.activeLayout);
-                    }
-                } else {
-                    // Just redraw labels (densityRadius/densityThreshold)
-                    state.gMap.selectAll('.map-label').remove();
-                    drawLabels(state.gMap, state.activeLayout);
-                }
+                // Layout is precomputed in Python — param changes only need label redraw
+                state.gMap.selectAll('.map-label').remove();
+                drawLabels(state.gMap, state.activeLayout);
                 state.sa.completed = false;
                 state.sa.positions.clear();
             } else if (saInvalidated && state.gMap) {
@@ -1576,11 +1495,17 @@ function initTuningPanel() {
             state.layoutMode = 'geo';
             state.activeLayout = state.layout;
             state.octiLayout = null;
+            // Sync layout mode dropdown
+            const layoutModeSelect = document.getElementById('layout-mode');
+            if (layoutModeSelect) layoutModeSelect.value = 'geo';
             if (state.gMap && state.layout) {
-                state.gMap.selectAll('.map-line, .map-line-casing, .map-station, .map-label, line').remove();
+                clearRouteHighlight();
+                state.gMap.selectAll('.map-line, .map-line-casing, .map-station, .map-label, .station-closed-x').remove();
                 drawLines(state.gMap, state.activeLayout);
                 drawStations(state.gMap, state.activeLayout, state.stations);
                 drawLabels(state.gMap, state.activeLayout);
+                initLineFocus(state.gMap);
+                updateMapSelection();
             }
             state.sa.completed = false;
             state.sa.positions.clear();
