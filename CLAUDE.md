@@ -6,14 +6,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 python/                        # Python implementation (original)
-└── src/                       # graph, station, pathfinder, menu, network_analysis, utils, build_dataset
+├── src/                       # graph, station, pathfinder, menu, network_analysis, utils, build_dataset
+├── metro_api.py               # Shanghai Metro official API client wrapper
+├── fetch_all.py               # One-shot: fetches all 20 lines from the API → metro_data/
+└── request_metro.py           # Direct API query utility (standalone)
 
 cpp/                           # C++17 implementation (feature-complete rewrite)
 ├── include/metro/             # Headers: station, graph, csv, pathfinder, network_analysis, menu, utils, build_dataset
-├── src/                       # Corresponding .cpp files (~2500 lines with pathfinder.cpp at ~840 lines)
+├── src/                       # Corresponding .cpp files (~3,100 lines total; pathfinder.cpp ~840 lines)
+├── backend/                   # HTTP REST API server (wraps metro_core for the web UI)
+│   ├── server.cpp             # ~620 lines: httplib + nlohmann/json, 16 JSON endpoints + static file mount
+│   └── static/                # Single-page UI: index.html, app.js (D3.js), style.css, d3.v7.min.js, layout.json, labeler.js
+├── third_party/               # Vendored single-header libs (committed): cpp-httplib/, nlohmann/
+├── CMakeLists.txt             # Builds metro_core static library + 5 targets: app, server, tests, coursework_check, build_dataset
+├── build_server.sh            # Static-link script for portable metro_server_s.exe (no MinGW DLLs needed)
 └── tests/
     ├── test_cases.cpp         # 41 tests (M1-M4 + extended) — mirrors python/tests/test_cases.py
     └── coursework_check.cpp   # 53 requirements checks mapped to 课设要求 scoring criteria
+
+scripts/
+├── fetch_station_coords.py    # One-shot: Overpass API → station_coords.json (530 lat/lng pairs); use --refresh to re-query
+├── station_coords.json        # Committed cache of real geographic coordinates per station ID
+├── station_coords_override.json # Manual fallback coords for stations OSM didn't have (~9 entries)
+├── .overpass_cache.json       # Raw OSM response cache (1 MB, committed to avoid re-querying)
+└── generate_layout.py         # Reads station_coords.json + Edge.csv → equirectangular projection → layout.json
 
 data/                           # NOT a separate dir — canonical CSVs live under python/data/ (shared with cpp/)
 metro_data/                     # NOT a separate dir — raw API CSVs live under python/metro_data/
@@ -27,15 +43,27 @@ Both implementations share the same `python/data/` and `python/metro_data/` dire
 
 ```bash
 cd python
+python fetch_all.py                   # Fetch raw data from Shanghai Metro official API → metro_data/
 python -m src.build_dataset          # Build Station.csv / Edge.csv from raw API data
 python main.py                        # Interactive console app
-python -m tests.test_cases           # 41 tests
+python -m tests.test_cases           # 41 tests (M1-M4 modules + extended)
 ```
 
 ### C++ (run from repo root or `cpp/`)
 
+**CMake (recommended)** — builds `metro_core` static library, then all targets:
+
 ```bash
-# Manual build — no CMake required (g++ MinGW-w64 or MSVC)
+cd cpp && mkdir -p build && cd build
+cmake .. && cmake --build .
+ctest --output-on_failure            # Run 41 tests
+```
+
+CMake targets: `metro_app` (console), `metro_server` (web), `metro_tests` (tests), `build_dataset` (data pipeline), `coursework_check` (grading).
+
+**Manual build** — no CMake required (g++ MinGW-w64 or MSVC):
+
+```bash
 cd cpp
 mkdir -p build
 
@@ -65,24 +93,42 @@ g++ -std=c++17 -Wall -I include src/station.cpp src/graph.cpp src/csv.cpp src/pa
 ./build/coursework_check.exe
 ```
 
-Or use CMake (if installed):
+### Web server (run from `cpp/`)
 
 ```bash
-cd cpp && mkdir build && cd build
-cmake .. && cmake --build .
-ctest --output-on-failure
+# CMake — adds the metro_server target alongside metro_app/metro_tests
+cd cpp && mkdir -p build && cd build
+cmake .. && cmake --build . --target metro_server
+
+# Or use the static-link bash script (produces a portable .exe on Windows)
+cd cpp && ./build_server.sh    # links statically, no MinGW DLLs needed at runtime
+
+# Run (port and data dir are optional; defaults: 8080, ../python/data)
+# IMPORTANT: use metro_server_s.exe (static-linked, no DLL deps) — the smaller metro_server.exe
+# is dynamic-linked and fails with exit 127 on Windows without MinGW DLLs on PATH.
+cd cpp/build
+./metro_server_s.exe --data ../python/data --port 8080
+# Then open http://localhost:8080
+
+# Or use the convenience batch file (hardcoded paths, edit to match your checkout):
+cpp/run_server.bat
+
+# Regenerate the geographic layout (two steps — rerun only when station topology changes):
+python scripts/fetch_station_coords.py          # Step 1: fetch lat/lng (uses cache; add --refresh to re-query OSM)
+python scripts/generate_layout.py               # Step 2: project to SVG coords → writes cpp/backend/static/layout.json
 ```
 
 ## Project overview
 
-Shanghai Metro Route Planning & Operations Management System (上海地铁路径规划与运营管理系统) — university data structures course design (东华大学, due 2026-07-01). Two implementations: Python (original) and C++17 (complete rewrite). Dijkstra + Yen's K-Shortest Paths over 20 metro lines (~530 stations, ~1300 edges).
+Shanghai Metro Route Planning & Operations Management System (上海地铁路径规划与运营管理系统) — university data structures course design (东华大学, due 2026-07-01). Two complete, feature-parallel implementations: Python (original, ~3,165 lines) and C++17 (rewrite, ~3,108 lines). Dijkstra + Yen's K-Shortest Paths over 20 metro lines (~530 physical stations, ~800 graph nodes after transfer splitting, ~1,300 directed edges).
 
 ## Architecture (common to both implementations)
 
-### Data pipeline
+### Data pipeline (three stages)
 
-1. **Raw API data** → `python/metro_data/line-XX.csv` (station listings) + `fltime-XX.csv` (interval times) for 20 lines
-2. **Build canonical CSVs** → `data/Station.csv` (站点ID, 站点名称, 所属线路, 运营状态), `data/Edge.csv` (起点站ID, 终点站ID, 线路, 运行方向, 通行时间), `data/Station_init.csv`, `data/update_station_status.csv`
+1. **Fetch** (Python only): `metro_api.py` + `fetch_all.py` hits the official Shanghai Metro mobile API (`m.shmetro.com`) → `python/metro_data/line-XX.csv` (station listings) + `fltime-XX.csv` (interval times) for 20 lines.
+2. **Build** (both implementations): `build_dataset` reads raw CSVs, assigns station IDs, splits transfer stations into separate nodes, creates transfer edges (time=5, line="换乘"), fills missing adjacent edges, removes ring-closure pseudo-edges → `python/data/Station.csv`, `Edge.csv`, `Station_init.csv`, `update_station_status.csv`.
+3. **Visualize**: `scripts/fetch_station_coords.py` (OSM Overpass API for lat/lng) → `scripts/generate_layout.py` (equirectangular projection to SVG coords) → `cpp/backend/static/layout.json`.
 
 ### Module dependency graph
 
@@ -98,8 +144,8 @@ main / main.cpp
 
 ### Key design decisions
 
-- **Transfer node splitting**: Same-name stations split by line (e.g., 人民广场 → 3 nodes: 0113/1号线, 0213/2号线, 0816/8号线). Transfer edges (time=5, line="换乘") connect same-name nodes bidirectionally.
-- **Station ID format**: `LLNN` = 2-digit line number + 2-digit sequence. e.g., `0101` = 1号线 #1 (莘庄).
+- **Transfer node splitting**: Same-name stations split by line (e.g., 人民广场 → 3 nodes: 0113/1号线, 0213/2号线, 0816/8号线). Transfer edges (time=5, line="换乘") connect same-name nodes bidirectionally. This is the critical design choice — the graph has ~800 nodes for ~530 physical stations.
+- **Station ID format**: `LLNN` = 2-digit line number + 2-digit sequence within line. e.g., `0101` = 1号线 #1 (莘庄). This format is hard-coded in test suites.
 - **Directed edges**: Both directions of each segment are separate edges (up/down travel times may differ).
 - **Edge filling**: `fill_missing_adjacent_edges()` patches fltime gaps — mirrors reverse-direction time or inserts default 3min for Y-branch forks (lines 5/10/11).
 - **Ring closure removal**: `remove_loop_closure_edges()` detects edges between same-name same-line stations (e.g., Line 4's 0401↔0426 pseudo-edge) and removes them.
@@ -109,16 +155,28 @@ main / main.cpp
 - **Shortest time (M3)**: `dijkstra_shortest_time()` — priority-queue Dijkstra, transfer penalty in edge weights
 - **K-shortest time (M3)**: `yen_k_shortest_time(k=3)` — spur-path with edge/node removal, path dedup
 - **Min transfers (M4)**: `dijkstra_min_transfers()` — tuple weight `(transfer_count, total_time)` with lexicographic comparison
-- **Station closure**: `Graph.neighbors(id, station_mgr)` filters closed target stations
-- **Line 4 loop**: Direction tags (内圈/外圈) via `line4_dirs` map keyed by station ID
+- **K-min transfers (M4)**: `yen_k_min_transfers(k=3)` — same spur-path algorithm, using TransferWeight
+- **Station closure**: `Graph.neighbors(id, station_mgr)` filters closed target stations; transfer edges never blocked
+- **Line 4 loop**: Direction tags (内圈/外圈) stored per edge in Edge.csv, recorded in `PathResult::line4_dirs` map
 - **Network analysis**: BFS `affected_area()` (K-order neighbor), DFS `count_components()` (connected components)
 
-### Important quirks
+### Important quirks (C++ specific — CRITICAL)
 
-- **UTF-8 BOM**: All CSV files use `utf-8-sig` encoding. The C++ `csv::Writer` writes BOM by default; `csv::Reader::skip_bom()` detects and skips `\xEF\xBB\xBF`.
-- **Terminal encoding**: Windows pre-Win10 terminals use GBK. Both implementations use ASCII-safe `[OK]`/`[错误]` markers for status. The C++ `main.cpp` calls `SetConsoleOutputCP(CP_UTF8)` on startup.
-- **`Station_init.csv`**: Pristine copy created by `build_dataset`, used by `StationManager.restore_initial()`. Must re-run `build_dataset` to regenerate after station changes.
-- **Trailing spaces**: Station names from the API may have trailing whitespace; `clean_name()` strips them.
+1. **Weight comparison MUST NOT be reversed**: `TimeWeight` and `TransferWeight` use natural `operator<` (smaller = better). Priority queues use `std::greater<>` for min-heap. Reversing this was the root cause of a path-optimality bug.
+
+2. **PredecessorInfo stores by value, NOT pointer**: The Edge from `Graph::neighbors()` is returned by value (temporary vector). Storing `const Edge*` would dangle.
+
+3. **rebuild_path() must handle two failure modes**: (a) start node has `prev_id = ""`, break when `curr.empty()`; (b) cycle detection via `std::unordered_set<std::string> seen` prevents infinite loops.
+
+4. **UTF-8 BOM**: All CSV files use `utf-8-sig` encoding. C++ `csv::Writer` writes BOM by default; `csv::Reader::skip_bom()` detects and skips `\xEF\xBB\xBF`. Required for Chinese Excel compatibility.
+
+5. **Terminal encoding**: Windows pre-Win10 terminals use GBK. C++ `main.cpp` calls `SetConsoleOutputCP(CP_UTF8)` on startup. Status messages use ASCII-safe `[OK]`/`[错误]` markers.
+
+6. **`Station_init.csv`**: Pristine copy created by `build_dataset`, used by `StationManager.restore_initial()`. Must re-run `build_dataset` to regenerate after station changes.
+
+7. **Trailing spaces**: Station names from the API may have trailing whitespace; `clean_name()` strips them.
+
+8. **Data directory resolution**: Tries 4 paths (`../python/data`, `python/data`, `data`, `../data`). Always run from repo root or `cpp/` directory.
 
 ## C++ specific design decisions
 
@@ -132,35 +190,56 @@ main / main.cpp
 | Priority queue (min-heap) | `std::priority_queue<T, vector<T>, std::greater<>>` |
 | BFS queue | `std::queue<std::pair<std::string, int>>` |
 
-### Weight comparison design (critical)
-
-The `TimeWeight` and `TransferWeight` structs use natural `operator<` (smaller = better). Priority queues are declared with `std::greater<>` to achieve min-heap behavior. The same `operator<` is used for dist-map relaxation (`new_weight < dist[v]`). **Do not** reverse the comparison (e.g., `return time > o.time`) — this was the root cause of a path-optimality bug.
-
-### Path reconstruction (rebuild_path)
-
-The `rebuild_path()` function walks backward through `came_from` (a predecessor map). Two pitfalls were fixed:
-1. **Empty prev_id**: The start node has `prev_id = ""`. The backward walk must break when `curr.empty()` is true.
-2. **Came_from cycles**: Cycle detection via `std::unordered_set<std::string> seen` prevents infinite loops in case of inconsistent predecessor updates.
-
-### PredecessorInfo — store by value, not pointer
-
-`PredecessorInfo` stores edge data (`line`, `direction`, `time`, `is_transfer`) by value, NOT as `const Edge*`. The Edge from `Graph::neighbors()` is returned by value (temporary vector); storing a pointer to it would dangle.
-
 ### CSV handling
 
-Self-contained lightweight parser in `csv.hpp/cpp` (~170 lines). Handles:
-- UTF-8 BOM detection and skipping on read
-- BOM writing on write (Excel compatibility)
-- Basic quoted field support (escaped `""`)
-- Windows CRLF line endings
-
-### Data file location
-
-Both `main.cpp` and `build_dataset.cpp` resolve paths relative to the working directory. They search multiple locations (e.g., `../python/data/`, `python/data/`, `data/`) to find `Edge.csv` and `Station.csv`.
+Self-contained lightweight parser in `csv.hpp/cpp` (~170 lines). Handles UTF-8 BOM detection/skipping, BOM writing, quoted fields (escaped `""`), Windows CRLF line endings.
 
 ### No external dependencies
 
-The C++ implementation uses only the C++17 standard library. Catch2 is not bundled — tests use a minimal custom framework with `check()` macros. This ensures build-anywhere simplicity.
+The C++ implementation uses only the C++17 standard library. **No Catch2, no gtest** — tests use a minimal custom framework with `check()` macros. This ensures build-anywhere simplicity.
+
+The `metro_server` target adds two vendored single-header libraries under `cpp/third_party/` (`cpp-httplib/httplib.h`, `nlohmann/json.hpp`) — both header-only with no runtime dependencies. Windows build links statically (`-static` + `-lws2_32`) so the resulting `.exe` runs without MinGW DLLs on PATH.
+
+## Web backend (cpp/backend/)
+
+`server.cpp` is a thin HTTP/JSON wrapper over `metro_core` — it does no algorithmic work of its own; every route delegates to existing `pathfinder::*`, `analysis::*`, and `StationManager` calls.
+
+### Global state + thread safety
+
+```cpp
+static metro::Graph g_graph;
+static metro::StationManager g_mgr;
+static std::shared_mutex g_state_mutex;
+```
+
+- Read routes (pathfinding, queries, analysis) take `std::shared_lock` — many can run concurrently.
+- Write routes (station close/open, batch CSV upload, restore) take `std::unique_lock` — exclusive.
+- The pathfinder functions accept `const Graph&` / `const StationManager&`, so they are naturally safe under shared_lock. `StationManager::set_status()` mutates and requires unique_lock.
+
+### Routes (16 endpoints)
+
+| Group | Routes |
+|---|---|
+| Data queries | `GET /api/stations`, `/api/stations/search?q=`, `/api/stations/<id>`, `/api/lines`, `/api/graph/summary`, `/api/layout`, `/api/health` |
+| Route planning | `POST /api/route/shortest-time`, `/api/route/k-shortest-time`, `/api/route/min-transfers`, `/api/route/k-min-transfers` |
+| Station mgmt | `POST /api/stations/<id>/close`, `/api/stations/<id>/open`, `/api/stations/batch-update` (multipart), `/api/stations/restore` |
+| Analysis | `POST /api/analysis/affected-area`, `GET /api/analysis/components` |
+
+Static files (`backend/static/`) are mounted at `/` via `svr.set_mount_point()`.
+
+### Frontend (cpp/backend/static/)
+
+- **`app.js`** (~1,464 lines) — Vanilla JS + D3.js v7, no build step. Features:
+  - SVG metro map with zoom/pan (D3 zoom behavior)
+  - Search dropdown with fuzzy station matching
+  - Route planning panel (shortest-time / min-transfers, 1 or 3 paths)
+  - Station management panel (toggle open/close, batch CSV upload, restore all)
+  - Network analysis panel (affected area BFS, connected components DFS)
+  - Live tuning panel for label rendering parameters (font size, tier thresholds, collision padding, SA params, octilinear layout params) — persisted to localStorage
+  - Octilinear schematic layout mode toggle
+- **`labeler.js`** (~303 lines) — Fork of D3-Labeler, patched for Chinese text. Simulated annealing for station label placement to avoid collisions.
+- **`layout.json`** (~100 KB) — Pre-generated by the two-step pipeline. Contains `stations` dict and `lines` dict with real adjacency segments (excludes transfer edges). Branched lines (5/10/11) and Line 4 ring render correctly.
+- **`LINE_COLORS`** is duplicated in FOUR places that must be kept in sync manually: `server.cpp`, `app.js`, `generate_layout.py`, and `build_dataset.hpp` (via `LINE_NAMES` map) — 20 entries each.
 
 ## Testing
 

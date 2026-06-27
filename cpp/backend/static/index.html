@@ -133,6 +133,21 @@
             <svg id="metro-map"></svg>
             <div class="map-tooltip" id="map-tooltip"></div>
             <div class="map-legend" id="map-legend"></div>
+            <details class="map-tuning" id="map-tuning">
+                <summary>🛠 显示参数</summary>
+                <div class="tune-row tune-mode-row">
+                    <label>地图模式</label>
+                    <select id="layout-mode-select">
+                        <option value="geo">地理投影</option>
+                        <option value="octilinear">八向示意图</option>
+                    </select>
+                    <span></span>
+                </div>
+                <div class="tuning-content" id="tuning-content">
+                    <!-- populated by initTuningPanel() from TUNING_DEFS -->
+                </div>
+                <button class="tune-reset" id="tune-reset">重置默认</button>
+            </details>
             <div class="loading-overlay" id="loading-overlay">
                 <div class="spinner"></div>
                 <span>计算中...</span>
@@ -143,6 +158,7 @@
     <div class="toast-container" id="toast-container"></div>
 
     <script src="/d3.v7.min.js"></script>
+    <script src="/labeler.js"></script>
     <script src="/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,12 @@
+{
+  "_comment": "Manual coordinate overrides for stations OSM did not have (浦江线/16号线/18号线 newer stations). Coordinates are approximate — within ~200m. Will be merged on top of OSM auto-matched results.",
+  "4102": {"lat": 31.0454, "lng": 121.5175, "name": "三鲁公路", "line": "浦江线"},
+  "4103": {"lat": 31.0417, "lng": 121.5267, "name": "闵瑞路",   "line": "浦江线"},
+  "4104": {"lat": 31.0419, "lng": 121.5345, "name": "浦航路",   "line": "浦江线"},
+  "4105": {"lat": 31.0367, "lng": 121.5430, "name": "东城一路", "line": "浦江线"},
+  "4106": {"lat": 31.0263, "lng": 121.5557, "name": "汇臻路",   "line": "浦江线"},
+  "1610": {"lat": 31.0453, "lng": 121.7607, "name": "惠南东",   "line": "16号线"},
+  "1611": {"lat": 30.9432, "lng": 121.8224, "name": "书院",     "line": "16号线"},
+  "1801": {"lat": 31.0567, "lng": 121.6134, "name": "航头",     "line": "18号线"},
+  "1802": {"lat": 31.0410, "lng": 121.6280, "name": "下沙",     "line": "18号线"}
+}
