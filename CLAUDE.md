@@ -24,6 +24,13 @@ cpp/                           # C++17 implementation (feature-complete rewrite)
     ├── test_cases.cpp         # 41 tests (M1-M4 + extended) — mirrors python/tests/test_cases.py
     └── coursework_check.cpp   # 53 requirements checks mapped to 课设要求 scoring criteria
 
+cpp_CLI/                       # C++17 minimal-viable CLI variant (~1,670 lines)
+├── include/                   # Headers: csv, station, graph, pathfinder (4 files, ~240 lines)
+├── src/                       # Implementation: csv, station, graph, pathfinder, main (5 files, ~1,430 lines)
+├── CMakeLists.txt             # Single target — metro_cli
+├── build.sh                   # Alternative: single g++ command, no CMake needed
+└── README.md                  # Self-contained build/run guide + cpp/ comparison table
+
 scripts/
 ├── fetch_station_coords.py    # One-shot: Overpass API → station_coords.json (530 lat/lng pairs); use --refresh to re-query
 ├── station_coords.json        # Committed cache of real geographic coordinates per station ID
@@ -31,11 +38,11 @@ scripts/
 ├── .overpass_cache.json       # Raw OSM response cache (1 MB, committed to avoid re-querying)
 └── generate_layout.py         # Reads station_coords.json + Edge.csv → equirectangular projection → layout.json
 
-data/                           # NOT a separate dir — canonical CSVs live under python/data/ (shared with cpp/)
+data/                           # NOT a separate dir — canonical CSVs live under python/data/ (shared with cpp/ and cpp_CLI/)
 metro_data/                     # NOT a separate dir — raw API CSVs live under python/metro_data/
 ```
 
-Both implementations share the same `python/data/` and `python/metro_data/` directories. The C++ `build_dataset` reads from `python/metro_data/` and writes to `python/data/`.
+All three implementations (`python/`, `cpp/`, `cpp_CLI/`) share the same `python/data/` directory. Only `cpp/build_dataset` and `python/-m src.build_dataset` can regenerate it from `python/metro_data/`; `cpp_CLI/` is read-only against that data.
 
 ## Commands
 
@@ -93,6 +100,31 @@ g++ -std=c++17 -Wall -I include src/station.cpp src/graph.cpp src/csv.cpp src/pa
 ./build/coursework_check.exe
 ```
 
+### cpp_CLI (run from repo root or `cpp_CLI/`)
+
+Self-contained minimal CLI variant. Reuses `python/data/` (no build_dataset of its own). Build with either CMake or a single g++ invocation:
+
+```bash
+# Option A — CMake
+cd cpp_CLI && mkdir -p build && cd build
+cmake .. && cmake --build .
+
+# Option B — bash script (single g++ call, static-linked)
+cd cpp_CLI && ./build.sh
+
+# Option C — direct g++ one-liner (MinGW-w64 or clang++)
+cd cpp_CLI
+g++ -std=c++17 -O2 -Wall -I include \
+    src/csv.cpp src/station.cpp src/graph.cpp src/pathfinder.cpp src/main.cpp \
+    -o build/metro_cli.exe
+
+# Run (data dir auto-detected; --data overrides)
+./build/metro_cli                                    # tries ../python/data, python/data, etc.
+./build/metro_cli --data D:/Code/metro/python/data   # explicit
+```
+
+No tests in this variant — it's intended as a minimal independently-deliverable artifact for the course's "上机代码实现 60 分" criteria. For algorithm regression testing use `cpp/`'s 41-test suite.
+
 ### Web server (run from `cpp/`)
 
 ```bash
@@ -120,9 +152,17 @@ python scripts/generate_layout.py               # Step 2: project to SVG coords 
 
 ## Project overview
 
-Shanghai Metro Route Planning & Operations Management System (上海地铁路径规划与运营管理系统) — university data structures course design (东华大学, due 2026-07-01). Two complete, feature-parallel implementations: Python (original, ~3,165 lines) and C++17 (rewrite, ~3,108 lines). Dijkstra + Yen's K-Shortest Paths over 20 metro lines (~530 physical stations, ~800 graph nodes after transfer splitting, ~1,300 directed edges).
+Shanghai Metro Route Planning & Operations Management System (上海地铁路径规划与运营管理系统) — university data structures course design (东华大学, due 2026-07-01). **Three** implementations sharing one canonical dataset (`python/data/`):
 
-## Architecture (common to both implementations)
+| Variant | Lines | Purpose |
+|---|---|---|
+| `python/` | ~3,165 | Original; owns the API fetch pipeline (`fetch_all.py`) |
+| `cpp/` | ~3,108 | Feature-complete C++ rewrite + HTTP server + D3.js web UI |
+| `cpp_CLI/` | ~1,670 | Minimal-viable C++ CLI; same M1–M4 functionality as `cpp/` but no server / no build_dataset / no tests |
+
+All three implement Dijkstra + Yen's K-Shortest Paths over 20 metro lines (~530 physical stations, ~800 graph nodes after transfer splitting, ~1,300 directed edges). When asked to fix a path-planning bug, fix it in **all** the variants that contain that code path — they drift silently otherwise.
+
+## Architecture (common to all three implementations)
 
 ### Data pipeline (three stages)
 
@@ -199,6 +239,25 @@ Self-contained lightweight parser in `csv.hpp/cpp` (~170 lines). Handles UTF-8 B
 The C++ implementation uses only the C++17 standard library. **No Catch2, no gtest** — tests use a minimal custom framework with `check()` macros. This ensures build-anywhere simplicity.
 
 The `metro_server` target adds two vendored single-header libraries under `cpp/third_party/` (`cpp-httplib/httplib.h`, `nlohmann/json.hpp`) — both header-only with no runtime dependencies. Windows build links statically (`-static` + `-lws2_32`) so the resulting `.exe` runs without MinGW DLLs on PATH.
+
+## cpp_CLI vs cpp/ — what diverged
+
+`cpp_CLI/` is structurally similar but **not** a subset of `cpp/`. The C++ rewrite work that improved the minimal version surfaced bugs in `cpp/` that were NOT back-ported (`cpp_CLI/`'s decisions are listed first):
+
+| Concern | cpp_CLI behavior | cpp/ behavior |
+|---|---|---|
+| Trailing transfer counts as transfer | No (rider semantics: walking to dst platform isn't a ride) | No (same) |
+| Initial transfer counts as transfer | No in `dijk_xfr`, **Yes** in `assemble()` → asymmetry not fixed by user decision | Same asymmetry |
+| `format()` shows terminal node reached via transfer | Yes (special-case at `i+1==size`) | **No** — silently drops the destination name when last edge is transfer |
+| Consecutive `--[换乘]--` markers | Collapsed to one | Two emitted side-by-side |
+| `Graph::neighbors()` API | Returns `const vector<Edge>&` (no copy) | Returns `vector<Edge>` (copies on every Dijkstra relaxation) |
+| Closed-station filter | Inline in pathfinder (`target_open`) | Inside `Graph::neighbors()` itself |
+| `pick_station` rejects closed stations | Yes, when `require_open=true` (path-planning callers pass true) | Lets closed stations through, fails later in `guard()` |
+| Batch update counter | Per-station (handles duplicate name+line correctly) | Per-row (undercounts on duplicate data) |
+| Yen K-best | Single template function `yen_k<>()` | Two ~50-line copy-paste blocks |
+| `BatchStats::errors` | Populated with per-row diagnostics | Populated similarly (no regression) |
+
+**When fixing a path-planning bug**: check whether it manifests in both variants. The shared algorithms (Dijkstra/Yen) live in different files (`cpp/src/pathfinder.cpp` vs `cpp_CLI/src/pathfinder.cpp`) with no shared header — bugs MUST be fixed in both places independently.
 
 ## Web backend (cpp/backend/)
 
