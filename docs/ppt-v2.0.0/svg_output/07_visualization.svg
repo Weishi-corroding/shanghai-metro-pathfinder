@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <text x="80" y="90" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="start">可视化与工程</text>
+  <line x1="80" y1="110" x2="1200" y2="110" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <text x="80" y="140" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#FFD54F" text-anchor="start">对应课设：可视化 · 端到端集成</text>
+  <rect x="60" y="175" width="1160" height="195" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="205" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">系统分层</text>
+  <rect x="170" y="235" width="900" height="32" rx="4" fill="#2A4A7A" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="185" y="257" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFFFFF" text-anchor="start">Browser (index.html + app.js + tailwind.js)</text>
+  <rect x="170" y="275" width="900" height="32" rx="4" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="185" y="297" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFFFFF" text-anchor="start">metro_server (cpp-httplib + nlohmann/json, 18 端点)</text>
+  <rect x="170" y="315" width="900" height="32" rx="4" fill="#152D4A" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="185" y="337" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFFFFF" text-anchor="start">metro_core static lib (Graph, StationManager, pathfinder, analysis)</text>
+  <rect x="170" y="355" width="900" height="32" rx="4" fill="#0F2440" stroke="#1E3A5F" stroke-width="1"/>
+  <text x="185" y="377" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFFFFF" text-anchor="start">python/data/ (Station.csv · Edge.csv · Station_init.csv)</text>
+  <text x="620" y="272" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">↓ HTTP/JSON</text>
+  <text x="620" y="312" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">↓ 共享</text>
+  <text x="620" y="352" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">↓</text>
+  <rect x="60" y="395" width="500" height="245" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="425" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFD54F" text-anchor="start">前端极简 UI（Tailwind CDN, 全离线）</text>
+  <image href="../images/metroView.jpg" x="75" y="445" width="470" height="180" preserveAspectRatio="xMidYMid meet"/>
+  <text x="80" y="635" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#91A9C8" text-anchor="start">顶部标签 · 卡片式结果 · 路径规划/运营/分析</text>
+  <rect x="580" y="395" width="320" height="245" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="600" y="425" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFD54F" text-anchor="start">18 REST 端点</text>
+  <text x="600" y="460" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 数据查询    7</text>
+  <text x="600" y="490" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 路径规划    4</text>
+  <text x="600" y="520" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 站点管理    4</text>
+  <text x="600" y="550" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 网络分析    2</text>
+  <text x="600" y="580" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 健康        1</text>
+  <text x="600" y="620" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#FFD54F" text-anchor="start">std::shared_mutex g_state_mutex</text>
+  <rect x="920" y="395" width="320" height="245" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="940" y="425" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFD54F" text-anchor="start">并发（shared_mutex）</text>
+  <text x="940" y="470" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFD54F" text-anchor="start">读接口 → shared_lock</text>
+  <text x="960" y="495" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="start">· 路径规划</text>
+  <text x="960" y="515" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="start">· 数据查询</text>
+  <text x="960" y="535" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="start">· 网络分析</text>
+  <text x="940" y="560" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFD54F" text-anchor="start">写接口 → unique_lock</text>
+  <text x="960" y="585" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="start">· 站点开关</text>
+  <text x="960" y="605" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="start">· 批量/恢复</text>
+  <text x="1200" y="700" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#91A9C8" text-anchor="end">C++17 · CMake · cpp-httplib · Vanilla JS · Tailwind</text>
+</svg>

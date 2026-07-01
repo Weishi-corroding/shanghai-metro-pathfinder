@@ -424,10 +424,131 @@ def slide_06_network_analysis():
     write_slide(6, "network_analysis", "\n  ".join(parts))
 
 def slide_07_visualization():
-    pass  # Task 4
+    parts = []
+    # Header
+    parts.append(text(80, 90, "可视化与工程", size=44, fill=TEXT_1, weight="700"))
+    parts.append(line(80, 110, 1200, 110, stroke=METRO_RED, sw=3))
+    parts.append(text(80, 140, "对应课设：可视化 · 端到端集成", size=18, fill=GOLD))
+
+    # 上半：分层架构图 (y=175~370, 1160x195 at x=60)
+    parts.append(rect(60, 175, 1160, 195, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(80, 205, "系统分层", size=22, fill=GOLD, weight="700"))
+    layers = [
+        ("#2A4A7A", 235, "Browser (index.html + app.js + tailwind.js)"),
+        ("#1E3A5F", 275, "metro_server (cpp-httplib + nlohmann/json, 18 端点)"),
+        ("#152D4A", 315, "metro_core static lib (Graph, StationManager, pathfinder, analysis)"),
+        ("#0F2440", 355, "python/data/ (Station.csv · Edge.csv · Station_init.csv)"),
+    ]
+    for fillc, ly, label in layers:
+        parts.append(rect(170, ly, 900, 32, fill=fillc, stroke=CARD_STROKE, sw=1, rx=4))
+        parts.append(text(185, ly + 22, label, size=16, fill=TEXT_1))
+    # Arrows between layers
+    parts.append(text(620, 272, "↓ HTTP/JSON", size=14, fill=TEXT_3, anchor="middle"))
+    parts.append(text(620, 312, "↓ 共享", size=14, fill=TEXT_3, anchor="middle"))
+    parts.append(text(620, 352, "↓", size=14, fill=TEXT_3, anchor="middle"))
+
+    # 中下-左：UI 截图 (y=395~640, 500x245 at x=60)
+    parts.append(rect(60, 395, 500, 245, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(80, 425, "前端极简 UI（Tailwind CDN, 全离线）", size=20, fill=GOLD, weight="700"))
+    parts.append(image("../images/metroView.jpg", 75, 445, 470, 180, preserve="xMidYMid meet"))
+    parts.append(text(80, 635, "顶部标签 · 卡片式结果 · 路径规划/运营/分析", size=14, fill=TEXT_4))
+
+    # 中下-中：端点分组卡 (y=395~640, 320x245 at x=580)
+    parts.append(rect(580, 395, 320, 245, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(600, 425, "18 REST 端点", size=20, fill=GOLD, weight="700"))
+    endpoints = [
+        (460, "▸ 数据查询    7"),
+        (490, "▸ 路径规划    4"),
+        (520, "▸ 站点管理    4"),
+        (550, "▸ 网络分析    2"),
+        (580, "▸ 健康        1"),
+    ]
+    for ey, s in endpoints:
+        parts.append(text(600, ey, s, size=16, fill=TEXT_2))
+    parts.append(text(600, 620, "std::shared_mutex g_state_mutex", size=14, fill=GOLD, font=MONO))
+
+    # 中下-右：并发模型 (y=395~640, 320x245 at x=920)
+    parts.append(rect(920, 395, 320, 245, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(940, 425, "并发（shared_mutex）", size=20, fill=GOLD, weight="700"))
+    parts.append(text(940, 470, "读接口 → shared_lock", size=18, fill=GOLD, weight="700"))
+    for i, s in enumerate(["· 路径规划", "· 数据查询", "· 网络分析"]):
+        parts.append(text(960, 495 + i * 20, s, size=14, fill=TEXT_3))
+    parts.append(text(940, 560, "写接口 → unique_lock", size=18, fill=GOLD, weight="700"))
+    for i, s in enumerate(["· 站点开关", "· 批量/恢复"]):
+        parts.append(text(960, 585 + i * 20, s, size=14, fill=TEXT_3))
+
+    # 底部
+    parts.append(text(1200, 700, "C++17 · CMake · cpp-httplib · Vanilla JS · Tailwind",
+                     size=14, fill=TEXT_4, anchor="end"))
+
+    write_slide(7, "visualization", "\n  ".join(parts))
+
 
 def slide_08_tests_summary():
-    pass  # Task 4
+    parts = []
+    # Header (no badge - summary page)
+    parts.append(text(80, 90, "测试验证与总结", size=44, fill=TEXT_1, weight="700"))
+    parts.append(line(80, 110, 1200, 110, stroke=METRO_RED, sw=3))
+
+    # 上部左：测试矩阵 (y=175~440, 560x265 at x=60)
+    parts.append(rect(60, 175, 560, 265, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(80, 210, "测试覆盖", size=24, fill=GOLD, weight="700"))
+    test_rows = [
+        (250, "test_cases.cpp    41 / 41 ✅   M1-M4 + 扩展"),
+        (285, "  · M1 菜单结构 · 输入验证"),
+        (320, "  · M2 运营管理 · 批量更新 · 恢复"),
+        (355, "  · M3 Dijkstra · Yen K-shortest"),
+        (390, "  · M4 最少换乘 · Yen K-min-transfer"),
+        (420, "coursework_check.cpp    53 / 53 ✅   课设要求映射"),
+    ]
+    for ry, s in test_rows:
+        parts.append(text(80, ry, s, size=18, fill=TEXT_2))
+
+    # 上部右：课设覆盖表 (y=175~440, 560x265 at x=660)
+    parts.append(rect(660, 175, 560, 265, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(680, 210, "6 大模块覆盖", size=24, fill=GOLD, weight="700"))
+    coverage = [
+        (255, "数据集建设", "10 pts", "20 线路 API 抓取"),
+        (285, "图拓扑",     "10 pts", "800 节点 + 换乘拆分"),
+        (315, "路径算法",   "15 pts", "4 算法 + K 优"),
+        (345, "运营管理",   "15 pts", "单/批量/恢复"),
+        (375, "网络分析",   " 5 pts", "BFS/DFS"),
+        (405, "可视化",     "—",      "Web UI + 官方配色"),
+    ]
+    for ry, mod, pts, note in coverage:
+        parts.append(text(680, ry, mod, size=16, fill=TEXT_2))
+        parts.append(text(900, ry, pts, size=16, fill=TEXT_2))
+        parts.append(text(1000, ry, "✅", size=16, fill=GOLD))
+        parts.append(text(1030, ry, note, size=16, fill=TEXT_3))
+
+    # 下部左：收获 (x=60, 560x220, y=460~680)
+    parts.append(rect(60, 460, 560, 220, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(80, 490, "收获", size=22, fill=GOLD, weight="700"))
+    gains = [
+        (525, "▸ C++ 图算法从零实现（Dijkstra · Yen · BFS · DFS）"),
+        (565, "▸ REST + 并发编程实践（shared_mutex 读写锁）"),
+        (605, "▸ 真实数据集端到端流水线（API → CSV → 图 → 可视化）"),
+    ]
+    for gy, s in gains:
+        parts.append(text(80, gy, s, size=17, fill=TEXT_2))
+    parts.append(text(80, 660, "github.com/Weishi-corroding/shanghai-metro-pathfinder",
+                     size=14, fill=TEXT_4, font=MONO))
+
+    # 下部右：展望 (x=660, 560x220)
+    parts.append(rect(660, 460, 560, 220, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(680, 490, "展望", size=22, fill=GOLD, weight="700"))
+    future = [
+        (525, "▸ 实时运营状态接入"),
+        (555, "▸ 移动端 / PWA"),
+        (585, "▸ 多目标（票价 + 拥挤度）"),
+        (615, "▸ 历史行程学习推荐"),
+    ]
+    for fy, s in future:
+        parts.append(text(680, fy, s, size=17, fill=TEXT_2))
+    parts.append(text(1200, 660, "东华大学 · 数据结构课设 · 2026-07 · v2.0.0",
+                     size=14, fill=TEXT_4, font=MONO, anchor="end"))
+
+    write_slide(8, "tests_summary", "\n  ".join(parts))
 
 
 if __name__ == "__main__":

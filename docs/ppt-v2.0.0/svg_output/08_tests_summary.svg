@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <text x="80" y="90" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="start">测试验证与总结</text>
+  <line x1="80" y1="110" x2="1200" y2="110" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <rect x="60" y="175" width="560" height="265" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFD54F" text-anchor="start">测试覆盖</text>
+  <text x="80" y="250" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">test_cases.cpp    41 / 41 ✅   M1-M4 + 扩展</text>
+  <text x="80" y="285" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">  · M1 菜单结构 · 输入验证</text>
+  <text x="80" y="320" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">  · M2 运营管理 · 批量更新 · 恢复</text>
+  <text x="80" y="355" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">  · M3 Dijkstra · Yen K-shortest</text>
+  <text x="80" y="390" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">  · M4 最少换乘 · Yen K-min-transfer</text>
+  <text x="80" y="420" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">coursework_check.cpp    53 / 53 ✅   课设要求映射</text>
+  <rect x="660" y="175" width="560" height="265" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="680" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFD54F" text-anchor="start">6 大模块覆盖</text>
+  <text x="680" y="255" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">数据集建设</text>
+  <text x="900" y="255" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">10 pts</text>
+  <text x="1000" y="255" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="255" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">20 线路 API 抓取</text>
+  <text x="680" y="285" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">图拓扑</text>
+  <text x="900" y="285" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">10 pts</text>
+  <text x="1000" y="285" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="285" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">800 节点 + 换乘拆分</text>
+  <text x="680" y="315" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">路径算法</text>
+  <text x="900" y="315" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">15 pts</text>
+  <text x="1000" y="315" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="315" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">4 算法 + K 优</text>
+  <text x="680" y="345" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">运营管理</text>
+  <text x="900" y="345" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">15 pts</text>
+  <text x="1000" y="345" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="345" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">单/批量/恢复</text>
+  <text x="680" y="375" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">网络分析</text>
+  <text x="900" y="375" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start"> 5 pts</text>
+  <text x="1000" y="375" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="375" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">BFS/DFS</text>
+  <text x="680" y="405" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">可视化</text>
+  <text x="900" y="405" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">—</text>
+  <text x="1000" y="405" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">✅</text>
+  <text x="1030" y="405" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">Web UI + 官方配色</text>
+  <rect x="60" y="460" width="560" height="220" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="490" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">收获</text>
+  <text x="80" y="525" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ C++ 图算法从零实现（Dijkstra · Yen · BFS · DFS）</text>
+  <text x="80" y="565" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ REST + 并发编程实践（shared_mutex 读写锁）</text>
+  <text x="80" y="605" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 真实数据集端到端流水线（API → CSV → 图 → 可视化）</text>
+  <text x="80" y="660" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#91A9C8" text-anchor="start">github.com/Weishi-corroding/shanghai-metro-pathfinder</text>
+  <rect x="660" y="460" width="560" height="220" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="680" y="490" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">展望</text>
+  <text x="680" y="525" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 实时运营状态接入</text>
+  <text x="680" y="555" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 移动端 / PWA</text>
+  <text x="680" y="585" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 多目标（票价 + 拥挤度）</text>
+  <text x="680" y="615" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="17" font-weight="400" fill="#DDEBFF" text-anchor="start">▸ 历史行程学习推荐</text>
+  <text x="1200" y="660" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#91A9C8" text-anchor="end">东华大学 · 数据结构课设 · 2026-07 · v2.0.0</text>
+</svg>
