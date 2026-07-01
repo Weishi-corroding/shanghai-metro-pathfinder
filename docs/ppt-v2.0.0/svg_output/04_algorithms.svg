@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <text x="80" y="90" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="start">路径算法</text>
+  <line x1="80" y1="110" x2="1200" y2="110" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <text x="80" y="140" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#FFD54F" text-anchor="start">对应课设：路径算法 15 分</text>
+  <rect x="60" y="175" width="280" height="185" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="75" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">Dijkstra Shortest</text>
+  <text x="75" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">权重: TimeWeight</text>
+  <text x="75" y="280" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">min-heap: std::greater&lt;&gt;</text>
+  <text x="75" y="320" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">用途: 单源最短时间</text>
+  <rect x="360" y="175" width="280" height="185" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="375" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">Yen K-Shortest</text>
+  <text x="375" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">算法: spur-path</text>
+  <text x="375" y="280" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">K = 3</text>
+  <text x="375" y="320" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">用途: Top-K 最短路径</text>
+  <rect x="660" y="175" width="280" height="185" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="675" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">Dijkstra Min Xfer</text>
+  <text x="675" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">权重: (transfers, time)</text>
+  <text x="675" y="280" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">字典序比较</text>
+  <text x="675" y="320" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">用途: 最少换乘</text>
+  <rect x="960" y="175" width="280" height="185" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="975" y="210" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">Yen K-Min Xfer</text>
+  <text x="975" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">Yen + TransferWeight</text>
+  <text x="975" y="280" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">K = 3</text>
+  <text x="975" y="320" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">用途: Top-K 最少换乘</text>
+  <rect x="60" y="390" width="620" height="250" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="420" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">Dijkstra 主循环（简化）</text>
+  <text x="80" y="440" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">pq: priority_queue&lt;Weight&gt; (min-heap)</text>
+  <text x="80" y="462" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">pq.push({start, 0})</text>
+  <text x="80" y="484" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">dist[start] = 0</text>
+  <text x="80" y="506" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">while (!pq.empty()) {</text>
+  <text x="80" y="528" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">  auto [u, du] = pq.top(); pq.pop();</text>
+  <text x="80" y="550" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">  if (visited[u]) continue;</text>
+  <text x="80" y="572" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">  visited[u] = true;</text>
+  <text x="80" y="594" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">  for (edge : g.neighbors(u, mgr)) {</text>
+  <text x="80" y="616" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">    Weight nw = du + edge_weight(edge);</text>
+  <rect x="700" y="390" width="560" height="250" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="720" y="420" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">换乘计数三规则（v1.0.0 核心修复）</text>
+  <text x="720" y="458" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">① 起点上第一条线不算换乘（line_trace 不预置起点线路）</text>
+  <text x="720" y="486" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">② 沿途换乘计一次（新线路 ID 不等于当前线路 ID）</text>
+  <text x="720" y="514" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#DDEBFF" text-anchor="start">③ 终点前最后一段换乘边不算换乘（i+1==size 特殊处理）</text>
+  <line x1="720" y1="540" x2="1240" y2="540" stroke="#1E3A5F" stroke-width="1" stroke-linecap="round"/>
+  <text x="720" y="568" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">示例</text>
+  <text x="720" y="596" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="15" font-weight="400" fill="#B7C7DE" text-anchor="start">莘庄→陆家嘴  1 换乘（1 号线 → 2 号线）</text>
+  <text x="720" y="620" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="15" font-weight="400" fill="#B7C7DE" text-anchor="start">人民广场→陆家嘴  0 换乘（直接乘 2 号线）</text>
+</svg>
