@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <text x="80" y="90" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="start">网络分析</text>
+  <line x1="80" y1="110" x2="1200" y2="110" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <text x="80" y="140" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#FFD54F" text-anchor="start">对应课设：网络分析 5 分</text>
+  <rect x="60" y="175" width="550" height="465" rx="12" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="215" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="28" font-weight="700" fill="#FFD54F" text-anchor="start">🌐 BFS 影响范围</text>
+  <text x="80" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">POST /api/analysis/affected-area</text>
+  <text x="80" y="296" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">std::queue&lt;pair&lt;string,int&gt;&gt; q;</text>
+  <text x="80" y="314" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">q.push({start, 0});</text>
+  <text x="80" y="332" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">visited.insert(start);</text>
+  <text x="80" y="350" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">while (!q.empty()) {</text>
+  <text x="80" y="368" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  auto [u, d] = q.front(); q.pop();</text>
+  <text x="80" y="386" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  if (d == k) continue;</text>
+  <text x="80" y="404" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  for (e : g.neighbors(u, mgr))</text>
+  <text x="80" y="422" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">    if (visited.insert(e.to).second)</text>
+  <text x="80" y="440" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">      q.push({e.to, d+1});</text>
+  <text x="80" y="458" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">}</text>
+  <text x="80" y="470" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#FFFFFF" text-anchor="start">示例：关闭人民广场后 K=2</text>
+  <text x="80" y="500" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">→ 影响范围包含相邻 12 站</text>
+  <text x="80" y="540" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFD54F" text-anchor="start">复杂度 O(V+E)  ·  访问 K 阶邻居</text>
+  <rect x="670" y="175" width="550" height="465" rx="12" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="690" y="215" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="28" font-weight="700" fill="#FFD54F" text-anchor="start">🔗 DFS 连通分量</text>
+  <text x="690" y="250" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="400" fill="#FFD54F" text-anchor="start">GET /api/analysis/components</text>
+  <text x="690" y="296" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">int count_components(g, mgr) {</text>
+  <text x="690" y="314" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  int cnt = 0;</text>
+  <text x="690" y="332" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  for (id : g.all_ids())</text>
+  <text x="690" y="350" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">    if (open(id) &amp;&amp; !visited[id]) {</text>
+  <text x="690" y="368" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">      dfs(id, visited, g, mgr);</text>
+  <text x="690" y="386" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">      cnt++;</text>
+  <text x="690" y="404" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">    }</text>
+  <text x="690" y="422" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">  return cnt;</text>
+  <text x="690" y="440" font-family="Consolas, 'Courier New', monospace" font-size="14" font-weight="400" fill="#DDEBFF" text-anchor="start">}</text>
+  <text x="690" y="470" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#FFFFFF" text-anchor="start">示例：正常运营 → 分量 = 1</text>
+  <text x="690" y="500" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">→ 关闭 4 号线所有站 → 分量 = 2+</text>
+  <text x="690" y="540" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFD54F" text-anchor="start">复杂度 O(V+E)  ·  检测图分裂</text>
+  <text x="640" y="680" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#91A9C8" text-anchor="middle">两算法均在 metro_core 中实现，前端可视化调用</text>
+</svg>

@@ -266,10 +266,162 @@ def slide_04_algorithms():
     write_slide(4, "algorithms", "\n  ".join(parts))
 
 def slide_05_operations():
-    pass  # Task 3
+    parts = []
+    # Header
+    parts.append(text(80, 90, "运营管理（M2）", size=44, fill=TEXT_1, weight="700"))
+    parts.append(line(80, 110, 1200, 110, stroke=METRO_RED, sw=3))
+    parts.append(text(80, 140, "对应课设：运营管理 15 分", size=18, fill=GOLD))
+
+    # Upper: three scenario cards (y=175~380, 380x205 each)
+    scenarios = [
+        (60, "🔒 单站关闭/开启", [
+            ("POST /api/stations/<id>/close", MONO, 15, TEXT_2),
+            ("POST /api/stations/<id>/open",  MONO, 15, TEXT_2),
+            ("→ StationManager.set_status()", FONT, 16, TEXT_3),
+            ("锁: unique_lock (写)",            FONT, 16, TEXT_3),
+        ]),
+        (460, "📦 批量 CSV 更新", [
+            ("POST /api/stations/batch-update", MONO, 15, TEXT_2),
+            ("multipart/form-data 上传",         FONT, 16, TEXT_3),
+            ("处理 update_station_status.csv",   FONT, 16, TEXT_3),
+            ("返回逐行诊断报告",                    FONT, 16, TEXT_3),
+        ]),
+        (860, "↩️ 恢复初始", [
+            ("POST /api/stations/restore",  MONO, 15, TEXT_2),
+            ("→ Station_init.csv 快照",       FONT, 16, TEXT_3),
+            ("build_dataset 生成时留存",       FONT, 16, TEXT_3),
+            ("一键完全复原",                   FONT, 16, TEXT_3),
+        ]),
+    ]
+    for x, title, lines in scenarios:
+        parts.append(rect(x, 175, 380, 205, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+        parts.append(text(x + 20, 215, title, size=24, fill=GOLD, weight="700"))
+        for i, (s, fnt, sz, clr) in enumerate(lines):
+            parts.append(text(x + 20, 260 + i * 32, s, size=sz, fill=clr, font=fnt))
+
+    # Middle: 闭站过滤原理图 (y=400~600, 780x200 at x=60)
+    parts.append(rect(60, 400, 780, 200, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(80, 430, "闭站路径过滤（Graph::neighbors 内部逻辑）", size=22, fill=GOLD, weight="700"))
+    # Three station nodes: A (open), B (closed, red border), C (open)
+    ax, ay = 180, 510
+    bx, by = 400, 510
+    cx, cy = 620, 510
+    # Draw edges first, so nodes overlay endpoints
+    # A→B: dim edge + red X
+    parts.append(line(ax, ay, bx, by, stroke="#4A6280", sw=2))
+    # X at midpoint of A-B
+    mAB_x, mAB_y = (ax + bx) // 2, (ay + by) // 2
+    parts.append(line(mAB_x - 10, mAB_y - 10, mAB_x + 10, mAB_y + 10, stroke=METRO_RED, sw=3))
+    parts.append(line(mAB_x - 10, mAB_y + 10, mAB_x + 10, mAB_y - 10, stroke=METRO_RED, sw=3))
+    # A→C: normal edge (drawn as curve above so it doesn't overlap A-B directly)
+    parts.append(path(f"M {ax} {ay} Q {(ax+cx)//2} {ay - 60} {cx} {cy}", fill="none", stroke=LC["2"], sw=3))
+    # C→B: dim edge + red X
+    parts.append(line(cx, cy, bx, by, stroke="#4A6280", sw=2))
+    mCB_x, mCB_y = (cx + bx) // 2, (cy + by) // 2
+    parts.append(line(mCB_x - 10, mCB_y - 10, mCB_x + 10, mCB_y + 10, stroke=METRO_RED, sw=3))
+    parts.append(line(mCB_x - 10, mCB_y + 10, mCB_x + 10, mCB_y - 10, stroke=METRO_RED, sw=3))
+    # Nodes
+    parts.append(circle(ax, ay, 32, fill=LC["2"]))
+    parts.append(text(ax, ay + 7, "A", size=22, fill=TEXT_1, weight="700", anchor="middle"))
+    parts.append(text(ax, ay + 60, "起点（开）", size=14, fill=TEXT_3, anchor="middle"))
+    # B closed (red border, dark fill)
+    parts.append(circle(bx, by, 32, fill="#3A0F14", stroke=METRO_RED, sw=3))
+    parts.append(text(bx, by + 7, "B", size=22, fill=METRO_RED, weight="700", anchor="middle"))
+    parts.append(text(bx, by + 60, "闭站", size=14, fill=METRO_RED, anchor="middle"))
+    parts.append(circle(cx, cy, 32, fill=LC["2"]))
+    parts.append(text(cx, cy + 7, "C", size=22, fill=TEXT_1, weight="700", anchor="middle"))
+    parts.append(text(cx, cy + 60, "邻站（开）", size=14, fill=TEXT_3, anchor="middle"))
+    # Annotation
+    parts.append(text(720, 500, "闭站节点 B", size=16, fill=METRO_RED, weight="700"))
+    parts.append(text(720, 522, "被过滤", size=16, fill=METRO_RED, weight="700"))
+
+    # Middle-right: 前端 UI 缩略 (y=400~600, 340x200 at x=880)
+    parts.append(rect(880, 400, 340, 200, fill=CARD, stroke=CARD_STROKE, sw=2, rx=10))
+    parts.append(text(900, 430, "Web 管理 UI", size=20, fill=GOLD, weight="700"))
+    # Placeholder rect 300x140 at (900, 445), dashed border
+    parts.append(rect(900, 445, 300, 140, fill="#0F2A45", stroke=CARD_STROKE, sw=1))
+    # Dashed overlay border using stroke-dasharray on a transparent rect
+    parts.append(
+        f'<rect x="900" y="445" width="300" height="140" fill="none" '
+        f'stroke="{CARD_STROKE}" stroke-width="1.5" stroke-dasharray="6,4"/>'
+    )
+    parts.append(text(1050, 520, "线路筛选 + 状态切换 + CSV 上传",
+                     size=14, fill=TEXT_3, anchor="middle"))
+
+    # Bottom: 实测数据 (y=630~700), three items horizontally
+    parts.append(text(60,   670, "批量更新 41 站 <10ms",       size=18, fill=TEXT_2))
+    parts.append(text(500,  670, "受影响路径实时重算",         size=18, fill=TEXT_2))
+    parts.append(text(900,  670, "线程安全（shared_mutex）",   size=18, fill=TEXT_2))
+    # 下方说明关于换乘边永不封锁
+    parts.append(text(80, 618, "但换乘边永不封锁 —— 换乘节点属同一物理站的不同平台",
+                     size=16, fill=TEXT_3))
+
+    write_slide(5, "operations", "\n  ".join(parts))
+
 
 def slide_06_network_analysis():
-    pass  # Task 3
+    parts = []
+    # Header
+    parts.append(text(80, 90, "网络分析", size=44, fill=TEXT_1, weight="700"))
+    parts.append(line(80, 110, 1200, 110, stroke=METRO_RED, sw=3))
+    parts.append(text(80, 140, "对应课设：网络分析 5 分", size=18, fill=GOLD))
+
+    # Left column: BFS 影响范围 (x=60, 550x465, y=175~640)
+    parts.append(rect(60, 175, 550, 465, fill=CARD, stroke=CARD_STROKE, sw=2, rx=12))
+    parts.append(text(80, 215, "🌐 BFS 影响范围", size=28, fill=GOLD, weight="700"))
+    parts.append(text(80, 250, "POST /api/analysis/affected-area",
+                     size=16, fill=GOLD, font=MONO))
+    bfs_code = [
+        "std::queue<pair<string,int>> q;",
+        "q.push({start, 0});",
+        "visited.insert(start);",
+        "while (!q.empty()) {",
+        "  auto [u, d] = q.front(); q.pop();",
+        "  if (d == k) continue;",
+        "  for (e : g.neighbors(u, mgr))",
+        "    if (visited.insert(e.to).second)",
+        "      q.push({e.to, d+1});",
+        "}",
+    ]
+    y = 296
+    for s in bfs_code:
+        parts.append(text(80, y, s, size=14, fill=TEXT_2, font=MONO))
+        y += 18
+    parts.append(text(80, 470, "示例：关闭人民广场后 K=2", size=20, fill=TEXT_1))
+    parts.append(text(80, 500, "→ 影响范围包含相邻 12 站", size=16, fill=TEXT_3))
+    parts.append(text(80, 540, "复杂度 O(V+E)  ·  访问 K 阶邻居",
+                     size=18, fill=GOLD, weight="700"))
+
+    # Right column: DFS 连通分量 (x=670, 550x465)
+    parts.append(rect(670, 175, 550, 465, fill=CARD, stroke=CARD_STROKE, sw=2, rx=12))
+    parts.append(text(690, 215, "🔗 DFS 连通分量", size=28, fill=GOLD, weight="700"))
+    parts.append(text(690, 250, "GET /api/analysis/components",
+                     size=16, fill=GOLD, font=MONO))
+    dfs_code = [
+        "int count_components(g, mgr) {",
+        "  int cnt = 0;",
+        "  for (id : g.all_ids())",
+        "    if (open(id) && !visited[id]) {",
+        "      dfs(id, visited, g, mgr);",
+        "      cnt++;",
+        "    }",
+        "  return cnt;",
+        "}",
+    ]
+    y = 296
+    for s in dfs_code:
+        parts.append(text(690, y, s, size=14, fill=TEXT_2, font=MONO))
+        y += 18
+    parts.append(text(690, 470, "示例：正常运营 → 分量 = 1", size=20, fill=TEXT_1))
+    parts.append(text(690, 500, "→ 关闭 4 号线所有站 → 分量 = 2+", size=16, fill=TEXT_3))
+    parts.append(text(690, 540, "复杂度 O(V+E)  ·  检测图分裂",
+                     size=18, fill=GOLD, weight="700"))
+
+    # Bottom hint (centered)
+    parts.append(text(W // 2, 680, "两算法均在 metro_core 中实现，前端可视化调用",
+                     size=16, fill=TEXT_4, anchor="middle"))
+
+    write_slide(6, "network_analysis", "\n  ".join(parts))
 
 def slide_07_visualization():
     pass  # Task 4

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <text x="80" y="90" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="start">运营管理（M2）</text>
+  <line x1="80" y1="110" x2="1200" y2="110" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <text x="80" y="140" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#FFD54F" text-anchor="start">对应课设：运营管理 15 分</text>
+  <rect x="60" y="175" width="380" height="205" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="215" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFD54F" text-anchor="start">🔒 单站关闭/开启</text>
+  <text x="80" y="260" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">POST /api/stations/&lt;id&gt;/close</text>
+  <text x="80" y="292" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">POST /api/stations/&lt;id&gt;/open</text>
+  <text x="80" y="324" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">→ StationManager.set_status()</text>
+  <text x="80" y="356" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">锁: unique_lock (写)</text>
+  <rect x="460" y="175" width="380" height="205" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="480" y="215" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFD54F" text-anchor="start">📦 批量 CSV 更新</text>
+  <text x="480" y="260" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">POST /api/stations/batch-update</text>
+  <text x="480" y="292" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">multipart/form-data 上传</text>
+  <text x="480" y="324" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">处理 update_station_status.csv</text>
+  <text x="480" y="356" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">返回逐行诊断报告</text>
+  <rect x="860" y="175" width="380" height="205" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="880" y="215" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFD54F" text-anchor="start">↩️ 恢复初始</text>
+  <text x="880" y="260" font-family="Consolas, 'Courier New', monospace" font-size="15" font-weight="400" fill="#DDEBFF" text-anchor="start">POST /api/stations/restore</text>
+  <text x="880" y="292" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">→ Station_init.csv 快照</text>
+  <text x="880" y="324" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">build_dataset 生成时留存</text>
+  <text x="880" y="356" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">一键完全复原</text>
+  <rect x="60" y="400" width="780" height="200" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="80" y="430" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFD54F" text-anchor="start">闭站路径过滤（Graph::neighbors 内部逻辑）</text>
+  <line x1="180" y1="510" x2="400" y2="510" stroke="#4A6280" stroke-width="2" stroke-linecap="round"/>
+  <line x1="280" y1="500" x2="300" y2="520" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <line x1="280" y1="520" x2="300" y2="500" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 180 510 Q 400 450 620 510" fill="none" stroke="#97D700" stroke-width="3"/>
+  <line x1="620" y1="510" x2="400" y2="510" stroke="#4A6280" stroke-width="2" stroke-linecap="round"/>
+  <line x1="500" y1="500" x2="520" y2="520" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <line x1="500" y1="520" x2="520" y2="500" stroke="#E4002B" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="180" cy="510" r="32" fill="#97D700"/>
+  <text x="180" y="517" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle">A</text>
+  <text x="180" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">起点（开）</text>
+  <circle cx="400" cy="510" r="32" fill="#3A0F14" stroke="#E4002B" stroke-width="3"/>
+  <text x="400" y="517" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#E4002B" text-anchor="middle">B</text>
+  <text x="400" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#E4002B" text-anchor="middle">闭站</text>
+  <circle cx="620" cy="510" r="32" fill="#97D700"/>
+  <text x="620" y="517" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle">C</text>
+  <text x="620" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">邻站（开）</text>
+  <text x="720" y="500" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="700" fill="#E4002B" text-anchor="start">闭站节点 B</text>
+  <text x="720" y="522" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="700" fill="#E4002B" text-anchor="start">被过滤</text>
+  <rect x="880" y="400" width="340" height="200" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="900" y="430" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFD54F" text-anchor="start">Web 管理 UI</text>
+  <rect x="900" y="445" width="300" height="140" rx="0" fill="#0F2A45" stroke="#1E3A5F" stroke-width="1"/>
+  <rect x="900" y="445" width="300" height="140" fill="none" stroke="#1E3A5F" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="1050" y="520" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">线路筛选 + 状态切换 + CSV 上传</text>
+  <text x="60" y="670" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">批量更新 41 站 &lt;10ms</text>
+  <text x="500" y="670" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">受影响路径实时重算</text>
+  <text x="900" y="670" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="18" font-weight="400" fill="#DDEBFF" text-anchor="start">线程安全（shared_mutex）</text>
+  <text x="80" y="618" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#B7C7DE" text-anchor="start">但换乘边永不封锁 —— 换乘节点属同一物理站的不同平台</text>
+</svg>
