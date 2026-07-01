@@ -229,13 +229,15 @@ static void test_m3() {
     check("M3-1", "Xinzhuang->People's Sq 0 transfers",
           r1.transfer_count == 0, "Direct on same line");
 
-    // Transfer boundary: starting at a transfer station and walking to another
-    // platform before the first ride is initial boarding, not a counted transfer.
+    // Transfer boundary (M3): starting at a specific platform of a transfer
+    // station and walking to another line's platform before the first ride now
+    // DOES count as a transfer (rider chose that platform, so switching lines
+    // is a real transfer).
     auto r2 = metro::pathfinder::dijkstra_shortest_time("0113", "0210", graph, mgr);
     check("M3-1", "People's Sq transfer-station start reachable", r2.valid,
           "time=" + std::to_string(r2.total_time) + "min");
-    check("M3-1", "People's Sq transfer-station start counts 0 transfers",
-          r2.transfer_count == 0,
+    check("M3-1", "People's Sq(L1)->Lujiazui(L2) counts 1 origin transfer",
+          r2.transfer_count == 1,
           "Transfer count: " + std::to_string(r2.transfer_count));
 
     // Normal transfer path from a non-transfer segment to another line.
@@ -244,8 +246,9 @@ static void test_m3() {
           r2b.transfer_count == 1,
           "Transfer count: " + std::to_string(r2b.transfer_count));
 
-    // Transfer boundary: ending at a transfer station via a final walking edge
-    // should not add a transfer, and format_path must still show the destination.
+    // Trailing transfer edge (arriving at another platform of the DESTINATION
+    // station) still does not add a transfer, and format_path must still show
+    // the destination name.
     auto r2c = metro::pathfinder::dijkstra_shortest_time("0112", "0213", graph, mgr);
     check("M3-1", "Transfer-station destination counts 0 transfers",
           r2c.valid && r2c.transfer_count == 0,
@@ -262,6 +265,18 @@ static void test_m3() {
     check("M3-1", "format_path collapses consecutive transfer markers",
           count_occurrences(r2d_text, "--[换乘]--") == 1,
           r2d_text);
+
+    // Degenerate same-station transfer: 莘庄(1号线, 0101) -> 莘庄(5号线, 0501).
+    // Path is a single transfer edge; expect 1 transfer, 5 min, and one physical
+    // station passed (途经 1 站, not 2).
+    auto r2e = metro::pathfinder::dijkstra_shortest_time("0101", "0501", graph, mgr);
+    check("M3-1", "Xinzhuang L1->Xinzhuang L5 = 1 transfer",
+          r2e.valid && r2e.transfer_count == 1 && r2e.total_time == 5,
+          "time=" + std::to_string(r2e.total_time) +
+          "min, transfers=" + std::to_string(r2e.transfer_count));
+    check("M3-1", "Xinzhuang L1->Xinzhuang L5 counts 1 physical station",
+          r2e.station_count() == 1,
+          "station_count()=" + std::to_string(r2e.station_count()));
 
     // Boundary: same start/end
     auto r3 = metro::pathfinder::dijkstra_shortest_time("0101", "0101", graph, mgr);
@@ -373,10 +388,11 @@ static void test_m4() {
           r2.transfer_count == 0,
           std::to_string(r2.transfer_count) + " transfers");
 
-    // Starting at a transfer station and walking before first ride is not counted.
+    // Starting at a specific platform of a transfer station and immediately
+    // switching lines counts as one origin transfer (rider chose that platform).
     auto r3 = metro::pathfinder::dijkstra_min_transfers("0113", "0210", graph, mgr);
-    check("M4-1", "People's Sq transfer-station start counts 0 transfers",
-          r3.transfer_count == 0,
+    check("M4-1", "People's Sq(L1)->Lujiazui(L2) counts 1 origin transfer",
+          r3.transfer_count == 1,
           std::to_string(r3.transfer_count) + " transfers");
 
     auto r3b = metro::pathfinder::dijkstra_min_transfers("0101", "0210", graph, mgr);
@@ -388,6 +404,12 @@ static void test_m4() {
     check("M4-1", "Transfer-station destination counts 0 transfers",
           r3c.transfer_count == 0,
           std::to_string(r3c.transfer_count) + " transfers");
+
+    // Degenerate same-station transfer under min-transfers: 莘庄(1)->莘庄(5) = 1.
+    auto r3d = metro::pathfinder::dijkstra_min_transfers("0101", "0501", graph, mgr);
+    check("M4-1", "Xinzhuang L1->Xinzhuang L5 = 1 transfer",
+          r3d.valid && r3d.transfer_count == 1,
+          "transfers=" + std::to_string(r3d.transfer_count));
 
     // Boundary: same station
     auto r4 = metro::pathfinder::dijkstra_min_transfers("0101", "0101", graph, mgr);

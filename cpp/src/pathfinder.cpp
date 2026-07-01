@@ -134,23 +134,40 @@ PathResult rebuild_path(const std::string& end_id,
 
     // 2. Scan edges to compute total_time, transfer info, and line4 directions
     int total_time = 0;
+    int transfer_edge_count = 0;
     // line_trace: (station_id, line, station_name) — ONE entry per *riding*
-    // segment (transfer edges are excluded). We intentionally do NOT seed it
-    // with the start station's nominal line. Two boundary cases depend on this:
-    //   • Start is a transfer station and the path begins with a transfer edge
-    //     (walking to another line's platform before boarding): boarding the
-    //     first line must NOT count as a transfer.
-    //   • End is a transfer station and the path ends with a transfer edge
-    //     (no trailing line is appended): reaching the destination platform is
-    //     not counted either.
-    // cur_line is therefore established by the first riding segment, matching
-    // the rider's perspective (the initial boarding is free).
+    // segment (transfer edges are excluded), plus a leading seed entry for the
+    // origin station's nominal line.
+    //
+    // Transfer-counting semantics (settled 2026-07-01): a transfer at the ORIGIN
+    // counts. Because line_trace is seeded with the origin's line, boarding a
+    // DIFFERENT line than the origin node sits on (i.e. the path begins with a
+    // transfer edge) is counted as a transfer. Example: 人民广场(1号线)→陆家嘴(2号线)
+    // = 1 transfer. Riding your origin's own line first is free (seed == first
+    // riding line → no change).
+    //
+    // A trailing transfer edge (arriving at another platform of the DESTINATION
+    // station) is still NOT counted — you have already reached your destination
+    // station, so walking to its other platform is not a ride change. That edge's
+    // 5 minutes still count toward total_time.
     std::vector<std::tuple<std::string, std::string, std::string>> line_trace;
+
+    // Seed with the origin station's nominal line so origin transfers are counted.
+    if (!path_ids.empty()) {
+        const Station* src_station = mgr.get(path_ids[0]);
+        if (src_station) {
+            line_trace.emplace_back(path_ids[0], src_station->line, src_station->name);
+        }
+    }
 
     for (size_t i = 1; i < path_ids.size(); ++i) {
         const Edge* edge = graph.get_edge(path_ids[i - 1], path_ids[i]);
         if (!edge) continue;
         total_time += edge->time;
+
+        if (edge->is_transfer()) {
+            ++transfer_edge_count;
+        }
 
         if (!edge->is_transfer()) {
             const Station* station = mgr.get(path_ids[i - 1]);
@@ -169,10 +186,11 @@ PathResult rebuild_path(const std::string& end_id,
     }
 
     result.total_time = total_time;
+    result.transfer_edge_count = transfer_edge_count;
 
     // 3. Compute transfer count and transfer_at from line_trace
     int transfers = 0;
-    if (!line_trace.empty()) {
+    if (line_trace.size() >= 2) {
         std::string current_line = std::get<1>(line_trace[0]);
         for (size_t j = 1; j < line_trace.size(); ++j) {
             if (std::get<1>(line_trace[j]) != current_line) {
@@ -186,6 +204,20 @@ PathResult rebuild_path(const std::string& end_id,
                 }
                 current_line = new_line;
             }
+        }
+    } else if (transfer_edge_count > 0 && path_ids.size() >= 2) {
+        // Degenerate pure-transfer path: no riding edges at all (line_trace holds
+        // only the seed). This is a same-station platform switch, e.g. 莘庄(1号线)
+        // →莘庄(5号线). If the endpoints sit on different lines it is exactly one
+        // transfer.
+        const Station* src_station = mgr.get(path_ids.front());
+        const Station* dst_station = mgr.get(path_ids.back());
+        std::string src_line = src_station ? src_station->line : "";
+        std::string dst_line = dst_station ? dst_station->line : "";
+        if (!src_line.empty() && !dst_line.empty() && src_line != dst_line) {
+            transfers = 1;
+            std::string sname = src_station ? src_station->name : "";
+            result.transfer_at.emplace_back(sname, src_line, dst_line);
         }
     }
 
@@ -302,9 +334,15 @@ PathResult min_transfer_with_removals(
 
     std::unordered_set<std::string> visited;
 
-    // Track which line reaches each node
+    // Track which line reaches each node. Seed with the source station's actual
+    // line so an origin transfer (path begins with a transfer edge onto another
+    // line) is properly costed as +1. This keeps the algorithm consistent with
+    // the display count in rebuild_path().
     std::unordered_map<std::string, std::string> node_line;
-    node_line[src_id] = "";
+    {
+        const Station* src_station = mgr.get(src_id);
+        node_line[src_id] = src_station ? src_station->line : "";
+    }
 
     while (!pq.empty()) {
         auto [w, u] = pq.top(); pq.pop();
@@ -603,9 +641,14 @@ PathResult dijkstra_min_transfers(const std::string& src_id,
 
     std::unordered_set<std::string> visited;
 
-    // Track which line reaches each node
+    // Track which line reaches each node. Seed with the source station's actual
+    // line so an origin transfer is properly costed (see min_transfer_with_removals
+    // for the full rationale — same rule here).
     std::unordered_map<std::string, std::string> node_line;
-    node_line[src_id] = "";
+    {
+        const Station* src_station = mgr.get(src_id);
+        node_line[src_id] = src_station ? src_station->line : "";
+    }
 
     while (!pq.empty()) {
         auto [w, u] = pq.top(); pq.pop();
@@ -847,7 +890,7 @@ std::string format_path(const PathResult& result,
     }
 
     out << path_str.str() << "\n\n";
-    out << "途经 " << station_count << " 站 | 总耗时: "
+    out << "途经 " << result.station_count() << " 站 | 总耗时: "
         << result.total_time << " 分钟 | 换乘: "
         << result.transfer_count << " 次";
 

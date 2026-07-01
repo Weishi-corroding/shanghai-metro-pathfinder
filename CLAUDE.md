@@ -276,7 +276,9 @@ The `metro_server` target adds two vendored single-header libraries under `cpp/t
 | Concern | cpp_CLI behavior | cpp/ behavior |
 |---|---|---|
 | Trailing transfer counts as transfer | No (rider semantics: walking to dst platform isn't a ride) | No (same) |
-| Initial transfer counts as transfer | No — `line_trace` is not seeded with the start's nominal line, so boarding the first line at a transfer-station origin is not a transfer (fixed 2026-06-30) | No (same fix in `rebuild_path`) |
+| Initial transfer counts as transfer | No — `line_trace` is not seeded with the start's nominal line, so boarding the first line at a transfer-station origin is not a transfer (fixed 2026-06-30) | **Yes** (fixed 2026-07-01) — `rebuild_path` seeds `line_trace` with the origin station's line, so a rider starting at a specific platform of a transfer station and switching lines is counted as one transfer. `dijkstra_min_transfers` seeds `node_line[src]` with the same line so the cost function agrees. |
+| Same-station pure transfer (莘庄1↔莘庄5) | 0 transfers (path is one transfer edge, no riding segments) | **1** transfer — degenerate branch in `rebuild_path` returns 1 when the path has no riding edges and `src_line != dst_line` (fixed 2026-07-01) |
+| Physical station count (途经N站) | Format renders each node, so terminal transfer platform double-counts | **Deduped** — `PathResult::station_count()` returns `station_ids.size() - transfer_edge_count`, and `format_path` prints that value. 莘庄→莘庄 shows 途经 1 站 (fixed 2026-07-01) |
 | `format()` shows terminal node reached via transfer | Yes (special-case at `i+1==size`) | Yes (same — `prev_emitted_xfer` + `i+1==size` keeps the destination name; fixed 2026-06-30) |
 | Consecutive `--[换乘]--` markers | Collapsed to one | Collapsed to one (fixed 2026-06-30) |
 | `Graph::neighbors()` API | Returns `const vector<Edge>&` (no copy) | Returns `vector<Edge>` (copies on every Dijkstra relaxation) |
@@ -286,7 +288,9 @@ The `metro_server` target adds two vendored single-header libraries under `cpp/t
 | Yen K-best | Single template function `yen_k<>()` | Two ~50-line copy-paste blocks |
 | `BatchStats::errors` | Populated with per-row diagnostics | Populated similarly (no regression) |
 
-**Transfer-counting semantics (both variants, settled 2026-06-30)**: transfer count reflects the rider's perspective — a *transfer* is switching from one riding line to a different riding line mid-trip. Boarding the first line (even when the chosen origin node is one platform of a multi-line station) is **not** a transfer, and walking to the destination's platform on a final transfer edge is **not** a transfer. Concretely, 人民广场→陆家嘴 is 0 transfers (board line 2 at 人民广场 directly), while 莘庄→陆家嘴 is 1 transfer (board line 1, switch to line 2 en route). This is enforced in `assemble()` / `rebuild_path()` by **not** seeding `line_trace` with the origin station's nominal line.
+**Transfer-counting semantics (cpp/, settled 2026-07-01)**: transfer count reflects the rider standing on a specific platform. Boarding a *different* line than your origin node sits on is a transfer (the origin platform switch counts). Walking to another platform of the *destination* station is NOT counted — you've already arrived. A pure same-station transfer (e.g. 莘庄1号线→莘庄5号线) is 1 transfer, 5 分钟, 途经 1 站. Examples: 人民广场(1号线)→陆家嘴(2号线) = 1 transfer (must walk to 2号线 platform first); 莘庄→陆家嘴 = 1 transfer (mid-trip line change at 上海体育馆 or similar); 一大会址·黄陂南路(1号线)→人民广场(2号线) = 0 transfers (rode line 1 to destination, arrived at 人民广场 physical station; the trailing transfer edge to the 2号线 platform is 5 min but not a counted ride change). Enforced in `rebuild_path()` by seeding `line_trace` with the origin's line and adding a degenerate branch for pure-transfer paths, plus in `dijkstra_min_transfers` / `min_transfer_with_removals` by seeding `node_line[src]` with the origin's line.
+
+**cpp_CLI/ still uses the pre-2026-07-01 semantics** (initial transfer free, same-station transfer = 0). The two variants intentionally diverge on this point — see the table row above.
 
 **When fixing a path-planning bug**: check whether it manifests in both variants. The shared algorithms (Dijkstra/Yen) live in different files (`cpp/src/pathfinder.cpp` vs `cpp_CLI/src/pathfinder.cpp`) with no shared header — bugs MUST be fixed in both places independently.
 

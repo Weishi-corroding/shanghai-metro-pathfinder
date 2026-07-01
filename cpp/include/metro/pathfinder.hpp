@@ -18,6 +18,10 @@ struct PathResult {
     std::vector<std::string> station_ids;  // ordered station ID list
     int total_time = 0;
     int transfer_count = 0;
+    // Number of transfer (换乘) edges traversed. Each transfer edge connects two
+    // line-nodes of the SAME physical station, so it must be subtracted when
+    // reporting the count of distinct physical stations passed (途经站数).
+    int transfer_edge_count = 0;
     // transfer_at: (station_name, from_line, to_line)
     std::vector<std::tuple<std::string, std::string, std::string>> transfer_at;
     // line4_dirs: station_id → direction tag ("内圈" or "外圈")
@@ -25,7 +29,15 @@ struct PathResult {
     bool valid = true;
     std::string error;
 
-    size_t station_count() const noexcept { return station_ids.size(); }
+    // Distinct physical stations on the route. Transfer-platform nodes of the
+    // same physical station collapse into one (each transfer edge merges two
+    // adjacent nodes), so we subtract the transfer-edge count. Safe for
+    // single-id / empty / error paths (transfer_edge_count defaults to 0).
+    size_t station_count() const noexcept {
+        size_t n = station_ids.size();
+        size_t x = static_cast<size_t>(transfer_edge_count);
+        return n > x ? n - x : n;
+    }
 };
 
 // ---------------------------------------------------------------------------

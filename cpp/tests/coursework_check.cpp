@@ -114,12 +114,12 @@ int main() {
               + " xfer=" + std::to_string(r.transfer_count));
     }
     {
-        // Transfer-station boundary: a passenger standing at 人民广场 boards L2
-        // directly to reach 陆家嘴 — walking to another platform before the first
-        // ride is initial boarding, not a transfer.
+        // Origin-transfer boundary: standing at 人民广场's 1号线 platform (0113)
+        // and heading to 陆家嘴 (2号线) requires walking to the 2号线 platform
+        // before boarding — that platform switch counts as one transfer.
         auto r = pathfinder::dijkstra_shortest_time("0113", "0210", graph, mgr);
-        check("Dijkstra time: 人民广场(transfer station)->陆家嘴 = 0 transfers",
-              r.valid && r.transfer_count == 0,
+        check("Dijkstra time: 人民广场(1号线)->陆家嘴(2号线) = 1 origin transfer",
+              r.valid && r.transfer_count == 1,
               "xfer=" + std::to_string(r.transfer_count));
     }
     {
@@ -140,11 +140,23 @@ int main() {
               "time=" + std::to_string(r.total_time));
     }
     {
-        // Transfer-station boundary (min-transfers): start at 人民广场 = 0 transfers.
+        // Origin-transfer boundary (min-transfers): starting on 1号线 at 人民广场
+        // and heading to 陆家嘴(2号线) counts one transfer.
         auto r = pathfinder::dijkstra_min_transfers("0113", "0210", graph, mgr);
-        check("Min transfers: 人民广场(transfer station)->陆家嘴 = 0 transfers",
-              r.valid && r.transfer_count == 0,
+        check("Min transfers: 人民广场(1号线)->陆家嘴(2号线) = 1 origin transfer",
+              r.valid && r.transfer_count == 1,
               "xfer=" + std::to_string(r.transfer_count));
+    }
+    {
+        // Degenerate pure-transfer: 莘庄(1号线) -> 莘庄(5号线) is one platform
+        // switch = 1 transfer, 5 min, 途经 1 站.
+        auto r = pathfinder::dijkstra_shortest_time("0101", "0501", graph, mgr);
+        check("Dijkstra time: 莘庄(1号线)->莘庄(5号线) = 1 transfer, 5 min, 1 station",
+              r.valid && r.transfer_count == 1 && r.total_time == 5
+              && r.station_count() == 1,
+              "time=" + std::to_string(r.total_time)
+              + " xfer=" + std::to_string(r.transfer_count)
+              + " stations=" + std::to_string(r.station_count()));
     }
     {
         auto rs = pathfinder::yen_k_shortest_time("0101", "0113", graph, mgr, 3);
