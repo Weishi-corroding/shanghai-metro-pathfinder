@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0B1F3A"/>
+  <rect x="0" y="0" width="12" height="720" rx="0" fill="#E4002B"/>
+  <text x="80" y="240" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="56" font-weight="700" fill="#FFFFFF" text-anchor="start">上海地铁路径规划与运营管理系统</text>
+  <text x="80" y="300" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="28" font-weight="400" fill="#DDEBFF" text-anchor="start">C++17 核心 · REST 后端 · Web 可视化前端</text>
+  <text x="80" y="360" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="22" font-weight="400" fill="#B7C7DE" text-anchor="start">东华大学 · 数据结构课程设计 · 2026-07</text>
+  <rect x="100" y="460" width="200" height="130" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="200" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFD54F" text-anchor="middle">20</text>
+  <text x="200" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#DDEBFF" text-anchor="middle">条线路</text>
+  <rect x="340" y="460" width="200" height="130" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="440" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFD54F" text-anchor="middle">530+</text>
+  <text x="440" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#DDEBFF" text-anchor="middle">个物理站</text>
+  <rect x="580" y="460" width="200" height="130" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="680" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFD54F" text-anchor="middle">1300+</text>
+  <text x="680" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#DDEBFF" text-anchor="middle">有向边</text>
+  <rect x="820" y="460" width="200" height="130" rx="10" fill="#132846" stroke="#1E3A5F" stroke-width="2"/>
+  <text x="920" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="44" font-weight="700" fill="#FFD54F" text-anchor="middle">18</text>
+  <text x="920" y="570" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="20" font-weight="400" fill="#DDEBFF" text-anchor="middle">REST 端点</text>
+  <text x="80" y="680" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="16" font-weight="400" fill="#91A9C8" text-anchor="start">v2.0.0 · 小组答辩版 · github.com/Weishi-corroding/shanghai-metro-pathfinder</text>
+</svg>
