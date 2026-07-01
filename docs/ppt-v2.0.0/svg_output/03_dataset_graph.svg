@@ -31,7 +31,7 @@
   <circle cx="310" cy="475" r="28" fill="#97D700"/>
   <text x="310" y="483" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">0213</text>
   <text x="310" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">2号线</text>
-  <circle cx="460" cy="475" r="28" fill="#001E62"/>
+  <circle cx="460" cy="475" r="28" fill="#0094D8"/>
   <text x="460" y="483" font-family="Consolas, 'Courier New', monospace" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">0816</text>
   <text x="460" y="530" font-family="Microsoft YaHei, SimHei, Arial, sans-serif" font-size="14" font-weight="400" fill="#B7C7DE" text-anchor="middle">8号线</text>
   <line x1="188" y1="475" x2="282" y2="475" stroke="#B7C7DE" stroke-width="2" stroke-linecap="round" stroke-dasharray="6,4"/>

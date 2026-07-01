@@ -25,13 +25,13 @@ GOLD = "#FFD54F"
 RED = "#D32F2F"
 METRO_RED = "#E4002B"
 
-# Shanghai metro real line colors (from cpp/backend/server.cpp LINE_COLORS)
+# Shanghai metro real line colors, synced to cpp/backend/server.cpp LINE_COLORS
 LC = {
     "1": "#E4002B", "2": "#97D700", "3": "#FCD600", "4": "#461D84",
-    "5": "#0094D8", "6": "#D40068", "7": "#ED8B00", "8": "#001E62",
-    "9": "#87CEEB", "10": "#B65EAF", "11": "#841C21", "12": "#007A53",
-    "13": "#EF95CF", "14": "#7C7B7B", "15": "#B4A76A", "16": "#5D9E68",
-    "17": "#B4917F", "18": "#B48A5C",
+    "5": "#944D9B", "6": "#D6006C", "7": "#ED6B06", "8": "#0094D8",
+    "9": "#7AC8E1", "10": "#C6AFD4", "11": "#841C21", "12": "#007A60",
+    "13": "#E77CA5", "14": "#9D8B63", "15": "#B2A680", "16": "#77D0C8",
+    "17": "#BB6414", "18": "#C4984E",
 }
 
 FONT = "Microsoft YaHei, SimHei, Arial, sans-serif"
