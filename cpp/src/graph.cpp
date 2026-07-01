@@ -2,8 +2,6 @@
 #include "metro/station.hpp"
 #include "metro/csv.hpp"
 
-#include <stdexcept>
-
 namespace metro {
 
 // ---------------------------------------------------------------------------
@@ -29,20 +27,6 @@ void Graph::load(const std::filesystem::path& csv_path) {
 
         // Ensure the destination node exists in adjacency map
         // (so node_count() includes sink nodes)
-        if (adj_.find(e.to_id) == adj_.end()) {
-            adj_[e.to_id] = {};
-        }
-    }
-}
-
-void Graph::load_from_edges(const std::vector<Edge>& edges) {
-    adj_.clear();
-    edge_count_ = 0;
-
-    for (const auto& e : edges) {
-        adj_[e.from_id].push_back(e);
-        ++edge_count_;
-
         if (adj_.find(e.to_id) == adj_.end()) {
             adj_[e.to_id] = {};
         }
@@ -101,21 +85,6 @@ const Edge* Graph::get_edge(const std::string& from, const std::string& to) cons
         if (e.to_id == to) return &e;
     }
     return nullptr;
-}
-
-// ---------------------------------------------------------------------------
-// All IDs
-// ---------------------------------------------------------------------------
-
-std::unordered_set<std::string> Graph::all_ids() const {
-    std::unordered_set<std::string> result;
-    for (const auto& [id, edges] : adj_) {
-        result.insert(id);
-        for (const auto& e : edges) {
-            result.insert(e.to_id);
-        }
-    }
-    return result;
 }
 
 } // namespace metro

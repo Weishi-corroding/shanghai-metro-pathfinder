@@ -195,22 +195,25 @@ StationManager::BatchStats StationManager::batch_update_from_csv(
             continue;
         }
 
-        // Match by (name, line) — find the station ID
-        bool found = false;
+        // Match by (name, line) and count the station entries actually updated.
+        // This avoids reporting one update for a row that matched multiple
+        // duplicate station entries, and keeps the counter aligned with the
+        // number of station records changed rather than the number of CSV rows.
+        int matched = 0;
         auto it = name_index_.find(name);
         if (it != name_index_.end()) {
             for (const auto& id : it->second) {
                 auto sit = stations_.find(id);
                 if (sit != stations_.end() && sit->second.line == line) {
                     sit->second.status = status;
-                    stats.updated++;
-                    found = true;
-                    break;
+                    ++matched;
                 }
             }
         }
 
-        if (!found) {
+        if (matched > 0) {
+            stats.updated += matched;
+        } else {
             stats.not_found++;
             stats.errors.push_back(
                 "Station not found: " + name + " (" + line + ")");

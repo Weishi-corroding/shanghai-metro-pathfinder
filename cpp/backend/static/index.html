@@ -4,161 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>上海地铁路径规划与运营管理系统</title>
-    <link rel="stylesheet" href="/style.css">
+    <!-- Tailwind CSS — vendored Play CDN compiler (offline, JITs classes in-browser) -->
+    <script src="/tailwind.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"PingFang SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        /* Minimal custom bits Tailwind doesn't cover ergonomically */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        [hidden] { display: none !important; }
+    </style>
 </head>
-<body>
-    <nav class="top-nav">
-        <div class="nav-brand">
-            <span class="logo">🚇</span>
-            <span class="title">上海地铁路径规划与运营管理系统</span>
-        </div>
-        <div class="nav-tabs" id="nav-tabs">
-            <button class="nav-tab active" data-panel="route-panel">路径规划</button>
-            <button class="nav-tab" data-panel="status-panel">运营管理</button>
-            <button class="nav-tab" data-panel="analysis-panel">网络分析</button>
-        </div>
-        <div class="nav-stats" id="nav-stats">
-            <span class="stat-badge">站点: <strong id="stat-stations">--</strong></span>
-            <span class="stat-badge">线路: <strong id="stat-lines">--</strong></span>
-            <span class="stat-badge">关闭: <strong id="stat-closed">--</strong></span>
-        </div>
-    </nav>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen">
 
-    <div class="main-container">
-        <aside class="sidebar" id="sidebar">
-            <!-- Route Panel -->
-            <div class="panel active" id="route-panel">
-                <h3>路径规划</h3>
-                <div class="form-group">
-                    <label for="src-input">起点站</label>
-                    <div class="search-wrapper">
-                        <input type="text" id="src-input" placeholder="输入站名搜索..." autocomplete="off">
-                        <div class="search-results" id="src-results"></div>
-                    </div>
-                    <div class="selected-station" id="src-selected"></div>
-                </div>
-                <div class="form-group">
-                    <label for="dst-input">终点站</label>
-                    <div class="search-wrapper">
-                        <input type="text" id="dst-input" placeholder="输入站名搜索..." autocomplete="off">
-                        <div class="search-results" id="dst-results"></div>
-                    </div>
-                    <div class="selected-station" id="dst-selected"></div>
-                </div>
-                <div class="form-group">
-                    <label>算法选择</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="algo" value="shortest-time" checked> 最短时间
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="algo" value="min-transfers"> 最少换乘
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>路径数量</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="k" value="1" checked> 1 条
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="k" value="3"> 3 条
-                        </label>
-                    </div>
-                </div>
-                <button class="btn-primary" id="btn-plan">🚇 规划路径</button>
-                <div class="route-results" id="route-results"></div>
+    <!-- ===== Top bar ===== -->
+    <header class="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center gap-4">
+            <div class="flex items-center gap-2 font-semibold text-slate-900 whitespace-nowrap">
+                <span class="text-xl">🚇</span>
+                <span class="hidden sm:inline">上海地铁路径规划系统</span>
+                <span class="sm:hidden">上海地铁</span>
             </div>
+            <nav id="tabs" class="flex items-center gap-1 ml-2">
+                <button data-tab="route"    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition">路径规划</button>
+                <button data-tab="ops"      class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition">运营管理</button>
+                <button data-tab="analysis" class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition">网络分析</button>
+            </nav>
+            <div class="ml-auto hidden md:flex items-center gap-2 text-xs text-slate-500">
+                <span class="px-2 py-1 bg-slate-100 rounded-md">站点 <strong id="stat-stations" class="text-slate-700">--</strong></span>
+                <span class="px-2 py-1 bg-slate-100 rounded-md">线路 <strong id="stat-lines" class="text-slate-700">--</strong></span>
+                <span class="px-2 py-1 bg-slate-100 rounded-md">关闭 <strong id="stat-closed" class="text-rose-600">--</strong></span>
+            </div>
+        </div>
+    </header>
 
-            <!-- Status Panel -->
-            <div class="panel" id="status-panel">
-                <h3>运营状态管理</h3>
-                <div class="form-group">
-                    <label>筛选线路</label>
-                    <select id="status-line-filter"><option value="">全部线路</option></select>
+    <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- ===== Route planning ===== -->
+        <section data-panel="route" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-base font-semibold text-slate-900 mb-4">路径规划</h2>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">起点站</label>
+                        <input id="src-input" type="text" autocomplete="off" placeholder="输入站名搜索…"
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                        <div id="src-results" class="search-results absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto" hidden></div>
+                        <div id="src-selected" class="mt-1 text-sm" hidden></div>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">终点站</label>
+                        <input id="dst-input" type="text" autocomplete="off" placeholder="输入站名搜索…"
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                        <div id="dst-results" class="search-results absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto" hidden></div>
+                        <div id="dst-selected" class="mt-1 text-sm" hidden></div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>筛选状态</label>
-                    <select id="status-filter">
-                        <option value="all">全部</option>
-                        <option value="open">开启</option>
-                        <option value="closed">关闭</option>
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-3 mt-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-slate-600">优化目标</span>
+                        <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input type="radio" name="algo" value="shortest-time" checked class="accent-blue-600"> 最短时间
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input type="radio" name="algo" value="min-transfers" class="accent-blue-600"> 最少换乘
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-slate-600">方案数</span>
+                        <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input type="radio" name="k" value="1" checked class="accent-blue-600"> 1 条
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input type="radio" name="k" value="3" class="accent-blue-600"> 3 条
+                        </label>
+                    </div>
+                    <button id="btn-plan"
+                            class="ml-auto px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        规划路径
+                    </button>
+                </div>
+            </div>
+            <div id="route-results" class="space-y-4"></div>
+        </section>
+
+        <!-- ===== Operations management ===== -->
+        <section data-panel="ops" class="space-y-6" hidden>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-slate-900">运营状态管理</h2>
+                    <div class="flex items-center gap-2">
+                        <label class="px-3 py-1.5 rounded-lg border border-slate-300 text-sm cursor-pointer hover:bg-slate-50 transition">
+                            批量更新 CSV
+                            <input id="batch-input" type="file" accept=".csv" hidden>
+                        </label>
+                        <button id="btn-restore"
+                                class="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-50 transition">
+                            恢复全部
+                        </button>
+                    </div>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-3 mb-4">
+                    <select id="ops-line" class="px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white outline-none focus:border-blue-500">
+                        <option value="">全部线路</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label for="status-search">搜索站名</label>
-                    <input type="text" id="status-search" placeholder="输入关键词筛选...">
-                </div>
-                <div class="status-actions">
-                    <button class="btn-secondary" id="btn-restore-all">🔄 恢复全部站点</button>
-                    <label class="btn-secondary file-upload-btn">
-                        📂 批量更新 (CSV)
-                        <input type="file" id="batch-csv-input" accept=".csv" hidden>
-                    </label>
-                </div>
-                <div class="station-list" id="station-list"></div>
-            </div>
-
-            <!-- Analysis Panel -->
-            <div class="panel" id="analysis-panel">
-                <h3>网络分析</h3>
-                <section class="analysis-section">
-                    <h4>受影响区域分析</h4>
-                    <p class="hint">分析关闭某个站点后，哪些周边站点会受到影响</p>
-                    <div class="search-wrapper">
-                        <input type="text" id="analysis-station-input" placeholder="输入站名搜索..." autocomplete="off">
-                        <div class="search-results" id="analysis-station-results"></div>
-                    </div>
-                    <div class="selected-station" id="analysis-station-selected"></div>
-                    <div class="form-group">
-                        <label for="bfs-depth">BFS 深度</label>
-                        <input type="range" id="bfs-depth" min="1" max="5" value="2">
-                        <span class="range-value" id="bfs-depth-label">2</span>
-                    </div>
-                    <button class="btn-primary" id="btn-affected-area">🔍 分析影响范围</button>
-                    <div class="analysis-result" id="affected-result"></div>
-                </section>
-                <hr>
-                <section class="analysis-section">
-                    <h4>连通分量分析</h4>
-                    <p class="hint">检测地铁网络是否因站点关闭而分裂</p>
-                    <button class="btn-primary" id="btn-components">🔗 计算连通分量</button>
-                    <div class="analysis-result" id="components-result"></div>
-                </section>
-            </div>
-        </aside>
-
-        <main class="map-container" id="map-container">
-            <svg id="metro-map"></svg>
-            <div class="map-tooltip" id="map-tooltip"></div>
-            <div class="map-legend" id="map-legend"></div>
-            <details class="map-tuning" id="map-tuning">
-                <summary>🛠 显示参数</summary>
-                <div class="tune-row tune-mode-row">
-                    <label>地图模式</label>
-                    <select id="layout-mode-select">
-                        <option value="geo">地理投影</option>
-                        <option value="octilinear">八向示意图</option>
+                    <select id="ops-status" class="px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white outline-none focus:border-blue-500">
+                        <option value="all">全部状态</option>
+                        <option value="open">仅开启</option>
+                        <option value="closed">仅关闭</option>
                     </select>
-                    <span></span>
+                    <input id="ops-search" type="text" placeholder="搜索站名…"
+                           class="px-3 py-2 rounded-lg border border-slate-300 text-sm outline-none focus:border-blue-500">
                 </div>
-                <div class="tuning-content" id="tuning-content">
-                    <!-- populated by initTuningPanel() from TUNING_DEFS -->
-                </div>
-                <button class="tune-reset" id="tune-reset">重置默认</button>
-            </details>
-            <div class="loading-overlay" id="loading-overlay">
-                <div class="spinner"></div>
-                <span>计算中...</span>
+                <div id="ops-count" class="text-xs text-slate-500 mb-2"></div>
+                <div id="ops-list" class="divide-y divide-slate-100 max-h-[28rem] overflow-auto rounded-lg border border-slate-100"></div>
             </div>
-        </main>
-    </div>
+        </section>
 
-    <div class="toast-container" id="toast-container"></div>
+        <!-- ===== Network analysis ===== -->
+        <section data-panel="analysis" class="space-y-6" hidden>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900">受影响区域分析</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">关闭某站后，按 BFS 深度查看受波及的相邻开放站点。</p>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">中心站点</label>
+                        <input id="an-input" type="text" autocomplete="off" placeholder="输入站名搜索…"
+                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                        <div id="an-results" class="search-results absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-auto" hidden></div>
+                        <div id="an-selected" class="mt-1 text-sm" hidden></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">BFS 深度 <span id="an-depth-label" class="text-blue-600 font-semibold">2</span></label>
+                        <input id="an-depth" type="range" min="1" max="5" value="2" class="w-full accent-blue-600 mt-2">
+                    </div>
+                </div>
+                <button id="btn-affected"
+                        class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                    分析影响范围
+                </button>
+                <div id="affected-result"></div>
+            </div>
 
-    <script src="/d3.v7.min.js"></script>
-    <script src="/labeler.js"></script>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900">连通分量分析</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">检测当前开放子网是否因关闭站点而分裂为多个连通块。</p>
+                </div>
+                <button id="btn-components"
+                        class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                    计算连通分量
+                </button>
+                <div id="components-result"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast container -->
+    <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
     <script src="/app.js"></script>
 </body>
 </html>

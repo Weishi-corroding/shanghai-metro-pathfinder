@@ -134,14 +134,18 @@ PathResult rebuild_path(const std::string& end_id,
 
     // 2. Scan edges to compute total_time, transfer info, and line4 directions
     int total_time = 0;
-    // line_trace: (station_id, line, station_name)
+    // line_trace: (station_id, line, station_name) — ONE entry per *riding*
+    // segment (transfer edges are excluded). We intentionally do NOT seed it
+    // with the start station's nominal line. Two boundary cases depend on this:
+    //   • Start is a transfer station and the path begins with a transfer edge
+    //     (walking to another line's platform before boarding): boarding the
+    //     first line must NOT count as a transfer.
+    //   • End is a transfer station and the path ends with a transfer edge
+    //     (no trailing line is appended): reaching the destination platform is
+    //     not counted either.
+    // cur_line is therefore established by the first riding segment, matching
+    // the rider's perspective (the initial boarding is free).
     std::vector<std::tuple<std::string, std::string, std::string>> line_trace;
-
-    // Record start station in line_trace
-    const Station* src_station = mgr.get(path_ids[0]);
-    if (src_station) {
-        line_trace.emplace_back(path_ids[0], src_station->line, src_station->name);
-    }
 
     for (size_t i = 1; i < path_ids.size(); ++i) {
         const Edge* edge = graph.get_edge(path_ids[i - 1], path_ids[i]);
@@ -794,23 +798,39 @@ std::string format_path(const PathResult& result,
     // Build visualized path string
     std::ostringstream path_str;
     int station_count = 0;
+    bool prev_emitted_xfer = false;
 
     for (size_t i = 0; i < result.station_ids.size(); ++i) {
         const Station* station = mgr.get(result.station_ids[i]);
-        if (!station) continue;
 
-        // Check if the incoming edge is a transfer edge
+        bool incoming_transfer = false;
         if (i > 0 && graph) {
             const Edge* edge = graph->get_edge(
                 result.station_ids[i - 1], result.station_ids[i]);
-            if (edge && edge->is_transfer()) {
-                path_str << " --[换乘]-- ";
-                continue;
-            }
+            incoming_transfer = edge && edge->is_transfer();
         }
 
-        if (station_count > 0) {
+        if (incoming_transfer) {
+            if (!prev_emitted_xfer) {
+                path_str << " --[换乘]-- ";
+                prev_emitted_xfer = true;
+            }
+            // Intermediate transfer-platform nodes are the same physical station
+            // and will be shown by the following riding edge. If this is the
+            // destination node, keep its station name so the path does not end
+            // with a bare transfer marker.
+            if (i + 1 != result.station_ids.size()) continue;
+        }
+
+        if (station_count > 0 && !prev_emitted_xfer) {
             path_str << " -> ";
+        }
+
+        if (!station) {
+            path_str << "[?" << result.station_ids[i] << "?]";
+            ++station_count;
+            prev_emitted_xfer = false;
+            continue;
         }
 
         std::string line_tag = "(" + station->line + ")";
@@ -823,6 +843,7 @@ std::string format_path(const PathResult& result,
 
         path_str << station->name << line_tag;
         ++station_count;
+        prev_emitted_xfer = false;
     }
 
     out << path_str.str() << "\n\n";

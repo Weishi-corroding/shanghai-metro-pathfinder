@@ -29,8 +29,8 @@ void Graph::load(const std::filesystem::path& csv) {
         catch (...) { ++skipped; continue; }
         if (e.from_id.empty() || e.to_id.empty()) { ++skipped; continue; }
         adj_[e.from_id].push_back(e);
-        // 终点也插入 adj_（空 vector），让 all_ids() / node_count() 报告
-        // 准确的节点总数——即使某节点只有入边没出边。
+        // 终点也插入 adj_（空 vector），让 node_count() 报告准确的节点总数——
+        // 即使某节点只有入边没出边。
         if (!adj_.count(e.to_id)) adj_[e.to_id] = {};
         ++edge_count_;
     }
@@ -57,12 +57,6 @@ const Edge* Graph::get_edge(const std::string& from,
         if (e.to_id == to) return &e;
     }
     return nullptr;
-}
-
-std::unordered_set<std::string> Graph::all_ids() const {
-    std::unordered_set<std::string> s;
-    for (const auto& [k, _] : adj_) s.insert(k);
-    return s;
 }
 
 } // namespace mini

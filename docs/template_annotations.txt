@@ -1,0 +1,10 @@
+=== COMMENTS (from comments.xml) ===
+
+=== RED-COLORED TEXT (instructor annotations) ===
+Para 132 [RED]: 【这里可对一些复杂的算法画流程图，简单的不用画。本项目中，大数的加、减、乘、除四个算法可以画流程图，以此表明自己看明白了算法。
+Para 133 [RED]: 画流程图推荐使用
+Para 133 [RED]: https://www.drawio.com/
+Para 133 [RED]: ，如果实在不熟悉，也可以在纸上画，然后拍照放进word文档里。
+Para 134 [RED]: 以下是用drawio画的流程图示例，与加法算法无关】
+
+=== HIGHLIGHTED TEXT ===

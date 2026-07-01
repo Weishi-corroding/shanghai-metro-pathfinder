@@ -16,7 +16,7 @@ cpp/                           # C++17 implementation (feature-complete rewrite)
 ├── src/                       # Corresponding .cpp files (~3,100 lines total; pathfinder.cpp ~840 lines)
 ├── backend/                   # HTTP REST API server (wraps metro_core for the web UI)
 │   ├── server.cpp             # ~620 lines: httplib + nlohmann/json, 16 JSON endpoints + static file mount
-│   └── static/                # Single-page UI: index.html, app.js (D3.js), style.css, d3.v7.min.js, layout.json, labeler.js
+│   └── static/                # Minimal map-free UI: index.html, app.js (REST client), tailwind.js (vendored); legacy/ holds the archived D3.js map UI
 ├── third_party/               # Vendored single-header libs (committed): cpp-httplib/, nlohmann/
 ├── CMakeLists.txt             # Builds metro_core static library + 5 targets: app, server, tests, coursework_check, build_dataset
 ├── build_server.sh            # Static-link script for portable metro_server_s.exe (no MinGW DLLs needed)
@@ -44,6 +44,27 @@ metro_data/                     # NOT a separate dir — raw API CSVs live under
 
 All three implementations (`python/`, `cpp/`, `cpp_CLI/`) share the same `python/data/` directory. Only `cpp/build_dataset` and `python/-m src.build_dataset` can regenerate it from `python/metro_data/`; `cpp_CLI/` is read-only against that data.
 
+## Root Directory
+
+```
+D:\Code\metro (repo root)
+├── .claude/              # Claude Code session state & plans (commit-safe to gitignore)
+│   ├── worktrees/        # Isolated git worktrees (e.g., for PPT generation)
+│   └── settings.local.json
+├── .git/                 # Git repository
+├── .gitignore
+├── .vscode/              # VS Code configs
+├── cpp/                  # Feature-complete C++ impl (see above)
+├── cpp_CLI/              # Minimal C++ CLI
+├── docs/                 # Empty directory (docs placeholder)
+├── metroView.jpg         # Full-page D3 UI screenshot — use for docs/presentations
+├── python/               # Python impl
+├── scripts/              # Layout, coordinate fetching, utilities
+└── CLAUDE.md             # This file
+```
+
+**Important**: No top-level `CMakeLists.txt` exists. CMake build directories must be under `cpp/` or `cpp_CLI/`.
+
 ## Commands
 
 ### Python (run from `python/`)
@@ -67,6 +88,8 @@ ctest --output-on_failure            # Run 41 tests
 ```
 
 CMake targets: `metro_app` (console), `metro_server` (web), `metro_tests` (tests), `build_dataset` (data pipeline), `coursework_check` (grading).
+
+**Running specific tests**: Run `metro_tests.exe` with a pattern to filter test names. Pass no arguments to run all 41 tests. On Windows use the `.exe` suffix.
 
 **Manual build** — no CMake required (g++ MinGW-w64 or MSVC):
 
@@ -142,12 +165,18 @@ cd cpp/build
 ./metro_server_s.exe --data ../python/data --port 8080
 # Then open http://localhost:8080
 
-# Or use the convenience batch file (hardcoded paths, edit to match your checkout):
-cpp/run_server.bat
+# Windows cmd/powershell (run from repo root):
+cpp\build\metro_server_s.exe --data python\data --port 8080
+
+# Or use the convenience batch file (edit hardcoded paths first):
+cpp\run_server.bat
 
 # Regenerate the geographic layout (two steps — rerun only when station topology changes):
 python scripts/fetch_station_coords.py          # Step 1: fetch lat/lng (uses cache; add --refresh to re-query OSM)
 python scripts/generate_layout.py               # Step 2: project to SVG coords → writes cpp/backend/static/layout.json
+
+# Also writes octilinear.json (schematic diagram layout):
+# cpp/backend/static/octilinear.json
 ```
 
 ## Project overview
@@ -247,15 +276,17 @@ The `metro_server` target adds two vendored single-header libraries under `cpp/t
 | Concern | cpp_CLI behavior | cpp/ behavior |
 |---|---|---|
 | Trailing transfer counts as transfer | No (rider semantics: walking to dst platform isn't a ride) | No (same) |
-| Initial transfer counts as transfer | No in `dijk_xfr`, **Yes** in `assemble()` → asymmetry not fixed by user decision | Same asymmetry |
-| `format()` shows terminal node reached via transfer | Yes (special-case at `i+1==size`) | **No** — silently drops the destination name when last edge is transfer |
-| Consecutive `--[换乘]--` markers | Collapsed to one | Two emitted side-by-side |
+| Initial transfer counts as transfer | No — `line_trace` is not seeded with the start's nominal line, so boarding the first line at a transfer-station origin is not a transfer (fixed 2026-06-30) | No (same fix in `rebuild_path`) |
+| `format()` shows terminal node reached via transfer | Yes (special-case at `i+1==size`) | Yes (same — `prev_emitted_xfer` + `i+1==size` keeps the destination name; fixed 2026-06-30) |
+| Consecutive `--[换乘]--` markers | Collapsed to one | Collapsed to one (fixed 2026-06-30) |
 | `Graph::neighbors()` API | Returns `const vector<Edge>&` (no copy) | Returns `vector<Edge>` (copies on every Dijkstra relaxation) |
 | Closed-station filter | Inline in pathfinder (`target_open`) | Inside `Graph::neighbors()` itself |
 | `pick_station` rejects closed stations | Yes, when `require_open=true` (path-planning callers pass true) | Lets closed stations through, fails later in `guard()` |
-| Batch update counter | Per-station (handles duplicate name+line correctly) | Per-row (undercounts on duplicate data) |
+| Batch update counter | Per-station (handles duplicate name+line correctly) | Per-station (fixed 2026-06-30; previously per-row) |
 | Yen K-best | Single template function `yen_k<>()` | Two ~50-line copy-paste blocks |
 | `BatchStats::errors` | Populated with per-row diagnostics | Populated similarly (no regression) |
+
+**Transfer-counting semantics (both variants, settled 2026-06-30)**: transfer count reflects the rider's perspective — a *transfer* is switching from one riding line to a different riding line mid-trip. Boarding the first line (even when the chosen origin node is one platform of a multi-line station) is **not** a transfer, and walking to the destination's platform on a final transfer edge is **not** a transfer. Concretely, 人民广场→陆家嘴 is 0 transfers (board line 2 at 人民广场 directly), while 莘庄→陆家嘴 is 1 transfer (board line 1, switch to line 2 en route). This is enforced in `assemble()` / `rebuild_path()` by **not** seeding `line_trace` with the origin station's nominal line.
 
 **When fixing a path-planning bug**: check whether it manifests in both variants. The shared algorithms (Dijkstra/Yen) live in different files (`cpp/src/pathfinder.cpp` vs `cpp_CLI/src/pathfinder.cpp`) with no shared header — bugs MUST be fixed in both places independently.
 
@@ -288,17 +319,18 @@ Static files (`backend/static/`) are mounted at `/` via `svr.set_mount_point()`.
 
 ### Frontend (cpp/backend/static/)
 
-- **`app.js`** (~1,464 lines) — Vanilla JS + D3.js v7, no build step. Features:
-  - SVG metro map with zoom/pan (D3 zoom behavior)
-  - Search dropdown with fuzzy station matching
-  - Route planning panel (shortest-time / min-transfers, 1 or 3 paths)
-  - Station management panel (toggle open/close, batch CSV upload, restore all)
-  - Network analysis panel (affected area BFS, connected components DFS)
-  - Live tuning panel for label rendering parameters (font size, tier thresholds, collision padding, SA params, octilinear layout params) — persisted to localStorage
-  - Octilinear schematic layout mode toggle
-- **`labeler.js`** (~303 lines) — Fork of D3-Labeler, patched for Chinese text. Simulated annealing for station label placement to avoid collisions.
-- **`layout.json`** (~100 KB) — Pre-generated by the two-step pipeline. Contains `stations` dict and `lines` dict with real adjacency segments (excludes transfer edges). Branched lines (5/10/11) and Line 4 ring render correctly.
-- **`LINE_COLORS`** is duplicated in FOUR places that must be kept in sync manually: `server.cpp`, `app.js`, `generate_layout.py`, and `build_dataset.hpp` (via `LINE_NAMES` map) — 20 entries each.
+The active UI is a **minimal, map-free** single page (rebuilt 2026-06-30). The original D3.js geographic-map / octilinear UI was archived to `backend/static/legacy/` (still served at `/legacy/…`); it is no longer linked from the live page.
+
+- **`index.html`** — Light "card" theme, top-bar tabs (路径规划 / 运营管理 / 网络分析), stat badges. No SVG map.
+- **`app.js`** (~480 lines) — Vanilla JS, **no D3, no map rendering**. Pure REST client over the 16 endpoints:
+  - Route planning (shortest-time / min-transfers, 1 or 3 paths) → results as vertical-timeline cards with line-color badges and 换乘 markers
+  - Station management (filter by line/status/name, toggle open/close, batch CSV upload, restore all)
+  - Network analysis (affected-area BFS chips, connected-components DFS list)
+  - Reusable debounced station-search dropdown backed by `/api/stations/search`
+- **`tailwind.js`** (~451 KB) — Vendored Tailwind Play CDN compiler. JITs utility classes in-browser (incl. dynamically-rendered ones via MutationObserver), so the page works **fully offline** like the rest of the project. Line colors come from `/api/lines` at runtime and are applied via inline styles.
+- **`legacy/`** — Archived original frontend: `app.js` (~1,464 lines, D3.js map), `labeler.js` (D3-Labeler SA fork), `layout.json` (equirectangular projection), `octilinear*.json` (8-direction schematic), `d3.v7.min.js`, old `index.html` / `style.css`. Restore by copying back to the static root if the map UI is needed again.
+- **Layout regeneration** (only relevant to the legacy map UI): `scripts/generate_layout.py` writes `layout.json` / `octilinear.json` to the static root — move them into `legacy/` (or update the script's output path) if regenerated.
+- **`LINE_COLORS`** still lives in `server.cpp`, `generate_layout.py`, and `build_dataset.hpp` (via `LINE_NAMES`). The live `app.js` no longer hard-codes them — it reads `/api/lines`, so the front-of-house copy is gone (3 places remain to sync, not 4).
 
 ## Testing
 

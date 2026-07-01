@@ -112,32 +112,6 @@ std::vector<std::unordered_map<std::string, std::string>> Reader::read_all() {
     return rows;
 }
 
-std::vector<std::vector<std::string>> Reader::read_all_raw() {
-    std::vector<std::vector<std::string>> rows;
-
-    std::ifstream file(path_, std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Cannot open file: " + path_.string());
-    }
-    skip_bom(file);
-
-    // Skip header
-    std::string dummy;
-    std::getline(file, dummy);
-
-    // Read data rows
-    std::string line;
-    while (std::getline(file, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-        if (line.empty()) continue;
-        rows.push_back(split_line(line));
-    }
-
-    return rows;
-}
-
 // ---------------------------------------------------------------------------
 // Writer
 // ---------------------------------------------------------------------------

@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
 #include <filesystem>
 
 namespace mini {
@@ -45,7 +44,6 @@ public:
     size_t node_count() const { return adj_.size(); }
     size_t edge_count() const { return edge_count_; }
 
-    std::unordered_set<std::string> all_ids() const;
     // 原始邻接表（只读访问），网络分析函数直接遍历
     const std::unordered_map<std::string, std::vector<Edge>>& adj() const { return adj_; }
 

@@ -13,9 +13,6 @@ public:
     void main_loop();
 
 private:
-    // Top-level menu
-    void show_main_menu();
-
     // M2: Station status management sub-menu
     void sub_menu_status();
 

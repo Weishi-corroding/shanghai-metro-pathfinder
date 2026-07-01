@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <filesystem>
@@ -21,9 +20,6 @@ public:
 
     // Read all rows as a vector of column-name→value maps.
     std::vector<std::unordered_map<std::string, std::string>> read_all();
-
-    // Read all rows as a vector of value vectors (in header column order).
-    std::vector<std::vector<std::string>> read_all_raw();
 
 private:
     std::filesystem::path path_;

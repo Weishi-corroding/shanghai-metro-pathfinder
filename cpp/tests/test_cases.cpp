@@ -18,6 +18,7 @@
 #include <vector>
 #include <filesystem>
 #include <cstdlib>
+#include <fstream>
 
 // =========================================================================
 // Simple test framework
@@ -64,6 +65,16 @@ static void load_data() {
     mgr.load(dir / "Station.csv");
 }
 
+static int count_occurrences(const std::string& haystack, const std::string& needle) {
+    int count = 0;
+    size_t pos = 0;
+    while ((pos = haystack.find(needle, pos)) != std::string::npos) {
+        ++count;
+        pos += needle.size();
+    }
+    return count;
+}
+
 // =========================================================================
 // M1 — Menu interaction (structural checks)
 // =========================================================================
@@ -93,6 +104,38 @@ static void test_m2() {
     check("M2-1", "CSV batch update executed", stats.updated > 0,
           "Updated " + std::to_string(stats.updated) + " records");
     check("M2-1", "Invalid stations skipped", true, "Unregistered stations auto-skipped");
+
+    // M2-1b: Batch update counts actual station records, not just matched rows.
+    // This protects duplicate (name,line) station entries in imported data.
+    {
+        namespace fs = std::filesystem;
+        auto station_csv = fs::temp_directory_path() / "metro_test_duplicate_station.csv";
+        auto update_csv2 = fs::temp_directory_path() / "metro_test_duplicate_update.csv";
+        {
+            std::ofstream f(station_csv, std::ios::binary);
+            f << "站点ID,站点名称,所属线路,运营状态\n"
+              << "T001,测试站,测试线,开启\n"
+              << "T002,测试站,测试线,开启\n";
+        }
+        {
+            std::ofstream f(update_csv2, std::ios::binary);
+            f << "站点名称,所属线路,运营状态\n"
+              << "测试站,测试线,关闭\n";
+        }
+        metro::StationManager duplicate_mgr;
+        duplicate_mgr.load(station_csv);
+        auto duplicate_stats = duplicate_mgr.batch_update_from_csv(update_csv2);
+        check("M2-1", "Batch update counts all matched station records",
+              duplicate_stats.updated == 2,
+              "Updated " + std::to_string(duplicate_stats.updated) + " records");
+        auto ds = duplicate_mgr.find_by_name("测试站");
+        bool all_closed = ds.size() == 2;
+        for (const auto* st : ds) all_closed = all_closed && !st->is_open();
+        check("M2-1", "Batch update applies to duplicate station records",
+              all_closed, "Matched " + std::to_string(ds.size()) + " records");
+        fs::remove(station_csv);
+        fs::remove(update_csv2);
+    }
 
     // Restore initial state
     mgr.restore_initial(dir / "Station_init.csv");
@@ -186,13 +229,39 @@ static void test_m3() {
     check("M3-1", "Xinzhuang->People's Sq 0 transfers",
           r1.transfer_count == 0, "Direct on same line");
 
-    // Transfer path: People's Sq(1) -> Lujiazui(2)
+    // Transfer boundary: starting at a transfer station and walking to another
+    // platform before the first ride is initial boarding, not a counted transfer.
     auto r2 = metro::pathfinder::dijkstra_shortest_time("0113", "0210", graph, mgr);
-    check("M3-1", "People's Sq(1)->Lujiazui(2) reachable", r2.valid,
+    check("M3-1", "People's Sq transfer-station start reachable", r2.valid,
           "time=" + std::to_string(r2.total_time) + "min");
-    check("M3-1", "People's Sq(1)->Lujiazui(2) 1 transfer",
-          r2.transfer_count == 1,
+    check("M3-1", "People's Sq transfer-station start counts 0 transfers",
+          r2.transfer_count == 0,
           "Transfer count: " + std::to_string(r2.transfer_count));
+
+    // Normal transfer path from a non-transfer segment to another line.
+    auto r2b = metro::pathfinder::dijkstra_shortest_time("0101", "0210", graph, mgr);
+    check("M3-1", "Xinzhuang->Lujiazui counts one riding-line change",
+          r2b.transfer_count == 1,
+          "Transfer count: " + std::to_string(r2b.transfer_count));
+
+    // Transfer boundary: ending at a transfer station via a final walking edge
+    // should not add a transfer, and format_path must still show the destination.
+    auto r2c = metro::pathfinder::dijkstra_shortest_time("0112", "0213", graph, mgr);
+    check("M3-1", "Transfer-station destination counts 0 transfers",
+          r2c.valid && r2c.transfer_count == 0,
+          "Transfer count: " + std::to_string(r2c.transfer_count));
+    auto r2c_text = metro::pathfinder::format_path(r2c, mgr, &graph);
+    check("M3-1", "format_path keeps destination after trailing transfer",
+          r2c_text.find("人民广场(2号线)") != std::string::npos,
+          r2c_text);
+
+    // Triple-line transfer: consecutive transfer edges should render as one marker,
+    // while the final transfer-platform destination is still shown.
+    auto r2d = metro::pathfinder::dijkstra_shortest_time("0113", "0816", graph, mgr);
+    auto r2d_text = metro::pathfinder::format_path(r2d, mgr, &graph);
+    check("M3-1", "format_path collapses consecutive transfer markers",
+          count_occurrences(r2d_text, "--[换乘]--") == 1,
+          r2d_text);
 
     // Boundary: same start/end
     auto r3 = metro::pathfinder::dijkstra_shortest_time("0101", "0101", graph, mgr);
@@ -304,11 +373,21 @@ static void test_m4() {
           r2.transfer_count == 0,
           std::to_string(r2.transfer_count) + " transfers");
 
-    // People's Sq(1)->Lujiazui(2) (1 transfer)
+    // Starting at a transfer station and walking before first ride is not counted.
     auto r3 = metro::pathfinder::dijkstra_min_transfers("0113", "0210", graph, mgr);
-    check("M4-1", "People's Sq(1)->Lujiazui(2) 1 transfer",
-          r3.transfer_count == 1,
+    check("M4-1", "People's Sq transfer-station start counts 0 transfers",
+          r3.transfer_count == 0,
           std::to_string(r3.transfer_count) + " transfers");
+
+    auto r3b = metro::pathfinder::dijkstra_min_transfers("0101", "0210", graph, mgr);
+    check("M4-1", "Xinzhuang->Lujiazui counts one riding-line change",
+          r3b.transfer_count == 1,
+          std::to_string(r3b.transfer_count) + " transfers");
+
+    auto r3c = metro::pathfinder::dijkstra_min_transfers("0112", "0213", graph, mgr);
+    check("M4-1", "Transfer-station destination counts 0 transfers",
+          r3c.transfer_count == 0,
+          std::to_string(r3c.transfer_count) + " transfers");
 
     // Boundary: same station
     auto r4 = metro::pathfinder::dijkstra_min_transfers("0101", "0101", graph, mgr);

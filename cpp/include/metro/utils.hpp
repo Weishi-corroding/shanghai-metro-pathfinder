@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <utility>
 
 namespace metro {
@@ -12,9 +11,6 @@ namespace utils {
 
 // Read menu choice with validation [min_val, max_val]. Retries until valid.
 int read_menu_choice(const std::string& prompt, int min_val, int max_val);
-
-// Read any integer. Retries until valid.
-int read_int(const std::string& prompt);
 
 // Read Y/N confirmation. Returns true for yes.
 bool read_yes_no(const std::string& prompt = "Are you sure? (Y/N): ");

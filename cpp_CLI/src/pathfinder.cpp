@@ -117,9 +117,8 @@ std::vector<std::string> walk_back(const std::string& end,
 //     assemble 里按乘客视角重算最稳妥。
 //
 // line_trace 是"乘车段的线路序列"：只记 *非换乘* 边的发车端站点 + 线路名。
-// 起点先 seed 一条（id, src.line, src.name）作为"起始所在线"。
-// 然后遍历边：换乘边只累加时间，不入 line_trace；普通边把"起点侧"站点和
-// 这条边的线路压入 trace。两段 trace 之间 line 不同即一次换乘。
+// 不用起点所属线路预填充；第一条乘车边只确定当前线路，不计换乘。
+// 两段实际乘车线路不同才算一次换乘。
 PathResult assemble(const std::vector<std::string>& ids,
                     const Graph& g, const StationManager& m) {
     PathResult r;
@@ -127,9 +126,11 @@ PathResult assemble(const std::vector<std::string>& ids,
     if (ids.empty()) { r.valid = false; r.error = "未找到可达路径。"; return r; }
 
     // 1) 第一遍扫描：累计总耗时 + 收集 line_trace + 4 号线方向标签
+    // line_trace 只记录实际乘车段，不用起点所属线路预填充。这样：
+    //   • 起点是换乘站、路径先走换乘通道再上车时，首次上车不计换乘；
+    //   • 终点是换乘站、路径最后只走换乘通道抵达时，不追加终点线路，
+    //     因而也不会虚增一次换乘。
     std::vector<std::tuple<std::string, std::string, std::string>> line_trace;
-    const Station* s0 = m.get(ids[0]);
-    if (s0) line_trace.emplace_back(ids[0], s0->line, s0->name);
 
     for (size_t i = 1; i < ids.size(); ++i) {
         const Edge* e = g.get_edge(ids[i - 1], ids[i]);

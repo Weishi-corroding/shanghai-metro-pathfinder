@@ -1,0 +1,607 @@
+=== PAGE SETUP ===
+Section 0: page=8.3x11.7 inches
+  Margins: L=1.2 R=1.2 T=1.0 B=1.0 inches
+Section 1: page=8.3x11.7 inches
+  Margins: L=1.2 R=1.2 T=1.0 B=1.0 inches
+Section 2: page=8.3x11.7 inches
+  Margins: L=1.2 R=1.2 T=1.0 B=1.0 inches
+
+=== HEADING STYLES ===
+Heading 1: type=PARAGRAPH (1)
+  font.name=None, size=279400, bold=True, italic=None, color=None
+  alignment=None, space_before=215900, space_after=209550, line_spacing=2.408333333333333
+Heading 2: type=PARAGRAPH (1)
+  font.name=Arial, size=203200, bold=True, italic=None, color=None
+  alignment=None, space_before=165100, space_after=165100, line_spacing=1.7333333333333334
+Heading 3: type=PARAGRAPH (1)
+  font.name=None, size=203200, bold=True, italic=None, color=None
+  alignment=None, space_before=165100, space_after=165100, line_spacing=1.7333333333333334
+Normal: type=PARAGRAPH (1)
+  font.name=None, size=133350, bold=None, italic=None, color=None
+  alignment=JUSTIFY (3), space_before=None, space_after=None, line_spacing=None
+List Paragraph: type=PARAGRAPH (1)
+  font.name=等线, size=None, bold=None, italic=None, color=None
+  alignment=None, space_before=None, space_after=None, line_spacing=None
+toc 1: type=PARAGRAPH (1)
+  font.name=宋体, size=190500, bold=True, italic=None, color=None
+  alignment=None, space_before=None, space_after=None, line_spacing=None
+toc 2: type=PARAGRAPH (1)
+  font.name=None, size=None, bold=None, italic=None, color=None
+  alignment=None, space_before=None, space_after=None, line_spacing=None
+toc 3: type=PARAGRAPH (1)
+  font.name=None, size=None, bold=None, italic=None, color=None
+  alignment=None, space_before=None, space_after=None, line_spacing=None
+
+=== FULL TEXT (decoded) ===
+[Normal] 数据结构课程设计
+[Normal] ----小组设计报告
+[Normal] 组    号：        01              
+[Normal] 指导教师：                        
+[Normal] 组成员及贡献度      
+[Normal] 日    期： 2024年6月25日至2022年7月05日
+[Normal] 目录
+[toc 1] 1 课程设计目的	1
+[toc 1] 2 任务完成情况	1
+[toc 1] 3 设计报告	1
+[toc 2] 3.1、问题描述	1
+[toc 2] 3.2、概要	1
+[toc 2] 3.3、功能模块设计	2
+[toc 2] 3.4、代码实现	3
+[toc 2] 3.5、使用示例	11
+[toc 2] 3.6、测试与调试	11
+[toc 3] 3.6.1 bignum大数模块测试	11
+[toc 1] 4 体会与感想	15
+[Heading 1] 1 课程设计目的
+[Normal] 学习获取知识的方法；
+[Normal] 提高发现问题、分析问题和解决实际问题的能力；
+[Normal] 加强创新意识和创新精神；
+[Normal] 加强团队的分工与合作；
+[Normal] 5、 掌握面向实际背景思考问题的方法。
+[Heading 1] 2 任务完成情况
+[Normal] 任务完成情况介绍，如2-1.（仅供参考，请根据实际完成情况填写）
+[Normal] 表1 任务完成情况表
+[Heading 1] 3 设计报告
+[Heading 2] 3.1、问题描述
+[Normal] 有一个合数n，大小达到10进制的1000位。请编程将其拆分为两个素数p和q，使得p*q=n。
+[Heading 2] 3.2、概要
+[Normal] 整个项目开发过程包含三个步骤：
+[Normal] （1）功能模块设计
+[Normal] 功能模块设计阶段包含1轮交互，交互过程概述如下：
+[Normal] 表2 功能模块设计交互过程
+[Normal] （2）代码实现
+[Normal] 代码实现共包含**轮交互，交互过程概述如下：
+[Normal] 表3 代码实现交互过程
+[Normal] （3）测试与调试
+[Normal] 测试与调试阶段包含**轮交互，交互过程概述如下：
+[Normal] 表4 测试与调试阶段交互过程
+[Heading 2] 3.3、功能模块设计
+[Normal] 为了能将整个项目开发出来，我们首先需要了解清楚总共有哪些模块，每个模块包含哪些功能。
+[Normal] 我们向Copilot提问如下：
+[Normal] 【提问】：现在需要编写C语言程序，完成以下任务：有一个合数n，大小达到10进制的1000位。请编程将其拆分为两个素数p和q，使得p*q=n。 由于这里涉及到大数，不能使用C语言内置的数据类型进行计算，请首先分析这个程序整体需要划分为几个模块，每个模块完成什么功能，它们之间如何相互调用。
+[Normal] 【回复】：这个问题是一个大数因数分解问题，涉及到大数运算和素数判断，是一个相当复杂的问题。我们可以将这个问题划分为以下几个模块：
+[List Paragraph] 大数表示模块：由于C语言内置的数据类型无法表示1000位的十进制数，我们需要自定义数据类型来表示大数。一种常见的方法是使用数组来表示大数，数组的每一个元素表示大数的一位。
+[List Paragraph] 大数运算模块：我们需要实现大数的基本运算，包括加法、减法、乘法、除法和取余。这些运算都需要考虑大数的特性，例如在做加法运算时需要处理进位的问题。
+[List Paragraph] 素数判断模块：我们需要一个函数来判断一个大数是否为素数。这可以通过试除法来实现，但是由于我们的数非常大，直接的试除法会非常慢。我们可以使用一些优化的算法，例如Miller-Rabin素性测试。
+[List Paragraph] 因数分解模块：这是我们的主要任务，我们需要找到一个合数的两个素数因子。这可以通过从2开始试除来实现，当我们找到一个因子时，我们可以通过除法得到另一个因子。然后我们需要使用素数判断模块来确认这两个因子是否为素数。
+[Normal] 这四个模块的相互调用关系如下：
+[List Paragraph] 因数分解模块会调用大数运算模块和素数判断模块。
+[List Paragraph] 大数运算模块会被素数判断模块和因数分解模块调用。
+[List Paragraph] 素数判断模块会调用大数运算模块。
+[Normal] 这个问题的难度主要在于大数运算和素数判断，需要有一定的数学基础和编程技巧。在实际编程中，我们还需要考虑到效率问题，尽可能地优化我们的算法。
+[Normal] 【说明】：按照以上的回复，我们发现，“大数表示模块”其实只是将一个大数用数组来表示，没有其它的操作，因此，可以将它和“大数运算模块”合并为“大数模块”。
+[Normal] 此外，除了以上模块之外，我们还需要一个主程序，能调用这些模块，实现项目的功能。
+[Normal] 因此，我们这个程序总共包含4个模块，如下图所示：
+[Normal] 图1  系统功能模块设计
+[Heading 2] 3.4、代码实现
+[Normal] 由于功能模块较多，不能通过一次提问，将所有功能模块都实现，下面通过多次提问，逐步细化和实现。
+[Normal] 【提问1】：请将大数表示模块和大数运算模块合并为一个模块，称为大数模块。并请将其设计为头文件，实现加法、减法、乘法、除法和取余操作。
+[Normal] 【回复1】：好的，我们可以创建一个名为bignum.h的头文件，其中定义了大数的表示和基本运算。由于C语言的限制，我们无法直接在头文件中实现函数，但我们可以在头文件中声明函数，然后在对应的.c文件中实现这些函数。
+[Normal] 以下是bignum.h的一个基本结构：
+[Normal] #ifndef BIGNUM_H
+[Normal] #define BIGNUM_H
+[Normal] // 定义大数的最大长度
+[Normal] #define MAX_SIZE 1000
+[Normal] // 定义大数的数据类型
+[Normal] typedef struct {
+[Normal]     int digits[MAX_SIZE]; // 数字数组，digits[0]表示最低位
+[Normal]     int size; // 大数的实际长度
+[Normal] } BigNum;
+[Normal] // 大数加法
+[Normal] BigNum addBigNum(BigNum a, BigNum b);
+[Normal] // 大数减法
+[Normal] BigNum subBigNum(BigNum a, BigNum b);
+[Normal] // 大数乘法
+[Normal] BigNum mulBigNum(BigNum a, BigNum b);
+[Normal] // 大数除法
+[Normal] BigNum divBigNum(BigNum a, BigNum b);
+[Normal] // 大数取余
+[Normal] BigNum modBigNum(BigNum a, BigNum b);
+[Normal] #endif // BIGNUM_H
+[Normal] 然后在bignum.c文件中实现这些函数。由于大数运算的实现比较复杂，这里只给出加法的一个简单实现：
+[Normal] #include "bignum.h"
+[Normal] BigNum addBigNum(BigNum a, BigNum b) {
+[Normal]     BigNum result;
+[Normal]     int carry = 0;
+[Normal]     int i;
+[Normal]     for (i = 0; i < a.size || i < b.size; i++) {
+[Normal]         int sum = carry;
+[Normal]         if (i < a.size) sum += a.digits[i];
+[Normal]         if (i < b.size) sum += b.digits[i];
+[Normal]         result.digits[i] = sum % 10;
+[Normal]         carry = sum / 10;
+[Normal]     }
+[Normal]     if (carry != 0) {
+[Normal]         result.digits[i++] = carry;
+[Normal]     }
+[Normal]     result.size = i;
+[Normal]     return result;
+[Normal] }
+[Normal] 这只是一个基本的实现，实际的大数运算可能需要处理更多的边界情况，并且需要优化以提高效率。
+[Normal] 【说明】：以上实现了加法函数，它的流程图为：
+[Normal] 【这里可对一些复杂的算法画流程图，简单的不用画。本项目中，大数的加、减、乘、除四个算法可以画流程图，以此表明自己看明白了算法。
+[Normal] 画流程图推荐使用https://www.drawio.com/，如果实在不熟悉，也可以在纸上画，然后拍照放进word文档里。
+[Normal] 以下是用drawio画的流程图示例，与加法算法无关】
+[Normal] 图2  流程图
+[Normal] 下面我们要求它实现所有函数。
+[Normal] 【提问2】：请继续完成其它4个函数的实现。
+[Normal] 【回复2】：以下是bignum.c中其它四个函数的基本实现：
+[Normal] // 大数减法
+[Normal] BigNum subBigNum(BigNum a, BigNum b) {
+[Normal]     BigNum result;
+[Normal]     int borrow = 0;
+[Normal]     int i;
+[Normal]     for (i = 0; i < a.size || i < b.size; i++) {
+[Normal]         int diff = a.digits[i] - borrow;
+[Normal]         if (i < b.size) diff -= b.digits[i];
+[Normal]         if (diff < 0) {
+[Normal]             diff += 10;
+[Normal]             borrow = 1;
+[Normal]         } else {
+[Normal]             borrow = 0;
+[Normal]         }
+[Normal]         result.digits[i] = diff;
+[Normal]     }
+[Normal]     result.size = i;
+[Normal]     return result;
+[Normal] }
+[Normal] // 大数乘法
+[Normal] BigNum mulBigNum(BigNum a, BigNum b) {
+[Normal]     BigNum result;
+[Normal]     for (int i = 0; i < a.size; i++) {
+[Normal]         for (int j = 0; j < b.size; j++) {
+[Normal]             result.digits[i + j] += a.digits[i] * b.digits[j];
+[Normal]         }
+[Normal]     }
+[Normal]     for (int i = 0; i < a.size + b.size; i++) {
+[Normal]         if (result.digits[i] >= 10) {
+[Normal]             result.digits[i + 1] += result.digits[i] / 10;
+[Normal]             result.digits[i] %= 10;
+[Normal]         }
+[Normal]     }
+[Normal]     result.size = a.size + b.size;
+[Normal]     if (result.digits[result.size - 1] == 0) result.size--;
+[Normal]     return result;
+[Normal] }
+[Normal] // 大数除法
+[Normal] BigNum divBigNum(BigNum a, BigNum b) {
+[Normal]     // 这里只实现了最简单的除法，没有处理余数
+[Normal]     BigNum result;
+[Normal]     result.size = a.size - b.size + 1;
+[Normal]     for (int i = result.size - 1; i >= 0; i--) {
+[Normal]         while (cmpBigNum(subBigNum(a, mulBigNum(b, result)), b) >= 0) {
+[Normal]             result.digits[i]++;
+[Normal]             a = subBigNum(a, b);
+[Normal]         }
+[Normal]     }
+[Normal]     return result;
+[Normal] }
+[Normal] // 大数取余
+[Normal] BigNum modBigNum(BigNum a, BigNum b) {
+[Normal]     BigNum result = a;
+[Normal]     while (cmpBigNum(result, b) >= 0) {
+[Normal]         result = subBigNum(result, b);
+[Normal]     }
+[Normal]     return result;
+[Normal] }
+[Normal] 这些函数的实现都比较基础，没有处理一些边界情况，例如除数为0的情况。在实际使用中，你可能需要根据你的需求来修改和优化这些函数。
+[Normal] 【说明】：到目前，已经实现了BigNum的头文件以及对应的源文件，我们将这些代码复制，然后在解决方案资源管理器中创建两个文件bignum.h和bignum.cpp。
+[Normal] 具体步骤为：
+[Normal] 1）创建一个项目test1，包含一个源文件test1.cpp。步骤参见第1章。
+[Normal] 2）切换到解决方案资源管理器，在“头文件”上点右键，然后点击菜单“添加->新建项”，创建头文件bignum.h。步骤参见5.4.2。
+[Normal] 3）在代码编辑窗口中打开bignum.h，将上述头文件的代码复制进去，然后保存。
+[Normal] 2）切换到解决方案资源管理器，在“源文件”上点右键，然后点击菜单“添加->新建项”，创建源文件bignum.cpp。
+[Normal] 3）在代码编辑窗口中打开bignum.cpp，将上述源文件的代码复制进去，然后保存。
+[Normal] 现在我们的项目文件结构如下：
+[Normal] 图3  添加大数模块后的项目文件
+[Normal] 【提问3】：请完成素数判断模块，同样也设计为头文件。
+[Normal] 【回复3】：素数判断模块可以设计为一个头文件，名为prime.h。在这个头文件中，我们可以定义一个函数isPrime，用于判断一个大数是否为素数。由于大数的特性，我们需要使用一种特殊的算法来判断素数，例如Miller-Rabin素性测试。
+[Normal] 以下是prime.h的一个基本结构：
+[Normal] #ifndef PRIME_H
+[Normal] #define PRIME_H
+[Normal] #include "bignum.h"
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n);
+[Normal] #endif // PRIME_H
+[Normal] 然后在prime.c文件中实现这个函数。由于Miller-Rabin素性测试的实现比较复杂，这里只给出一个简单的实现：
+[Normal] #include "prime.h"
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n) {
+[Normal]     // 这只是一个简单的实现，实际的素数判断需要使用更复杂的算法
+[Normal]     if (n.size == 1 && n.digits[0] < 2) {
+[Normal]         return 0; // 0和1不是素数
+[Normal]     }
+[Normal]     for (int i = 2; i * i <= n.digits[n.size - 1]; i++) {
+[Normal]         if (modBigNum(n, intToBigNum(i)).digits[0] == 0) {
+[Normal]             return 0; // 可以被整除，不是素数
+[Normal]         }
+[Normal]     }
+[Normal]     return 1; // 是素数
+[Normal] }
+[Normal] 这只是一个基本的实现，实际的素数判断可能需要处理更多的边界情况，并且需要优化以提高效率。
+[Normal] 【说明】：查看这个函数，发现它的for循环写得有点问题。如果对于这些算法不熟悉，这里看不出错误的话，只能通过测试来发现。因为这个算法比较简单，所以我们比较容易发现这个错误，下面请它纠正。
+[Normal] 【提问4】：i * i <= n.digits[n.size - 1]，只需要判断i*i和n的最高位相比的大小关系吗？
+[Normal] 【回复4】：对不起，这是我的错误。这个判断条件是不正确的。在这里，我们需要判断的是i * i是否小于等于n，而不是n的最高位。由于n是一个大数，我们不能直接使用i * i <= n这样的判断条件。我们需要将i * i转换为大数，然后使用大数的比较函数来进行比较。
+[Normal] 以下是修改后的代码：
+[Normal] #include "prime.h"
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n) {
+[Normal]     // 这只是一个简单的实现，实际的素数判断需要使用更复杂的算法
+[Normal]     if (n.size == 1 && n.digits[0] < 2) {
+[Normal]         return 0; // 0和1不是素数
+[Normal]     }
+[Normal]     for (int i = 2; i * i <= intToBigNum(n.digits[n.size - 1]); i++) {
+[Normal]         if (modBigNum(n, intToBigNum(i)).digits[0] == 0) {
+[Normal]             return 0; // 可以被整除，不是素数
+[Normal]         }
+[Normal]     }
+[Normal]     return 1; // 是素数
+[Normal] }
+[Normal] 在这里，intToBigNum是一个将整数转换为大数的函数，我们需要在大数模块中实现它。这个函数的实现可能会比较复杂，因为我们需要处理大数的表示和运算。
+[Normal] 这只是一个基本的实现，实际的素数判断可能需要处理更多的边界情况，并且需要优化以提高效率。
+[Normal] 【说明】：在某些情况下，要改正一个错误，不能通过简单的描述就想让它知道该怎么改正，我们需要稍微详细点描述哪里错了，应该怎么改，我们描述得越详细，它越能明白我们的意思，也就能生成我们更满意的代码。
+[Normal] 此外，我们还发现，有两个函数没有被定义，因此继续提问如下：
+[Normal] 【提问5】：这个比较还是错误的，应该是将i转换为大数，使用mulBigNum将两个i相乘，然后再和n比较大小。在此之前，需要在大数模块增加两个函数，一个是将int型整数转换为大数，另一个是比较两个大数的大小。
+[Normal] 【回复5】：对不起，我犯了一个错误。你是对的。我们需要将i转换为大数，然后使用mulBigNum函数将两个i相乘，然后再和n比较大小。同时，我们需要在大数模块中增加两个函数，一个是将int型整数转换为大数，另一个是比较两个大数的大小。
+[Normal] 以下是在bignum.h中增加的两个函数的声明：
+[Normal] // 将int型整数转换为大数
+[Normal] BigNum intToBigNum(int n);
+[Normal] // 比较两个大数的大小，如果a > b返回1，如果a < b返回-1，如果a == b返回0
+[Normal] int cmpBigNum(BigNum a, BigNum b);
+[Normal] 以下是在bignum.c中增加的两个函数的实现：
+[Normal] // 将int型整数转换为大数
+[Normal] BigNum intToBigNum(int n) {
+[Normal]     BigNum result;
+[Normal]     result.size = 0;
+[Normal]     while (n > 0) {
+[Normal]         result.digits[result.size++] = n % 10;
+[Normal]         n /= 10;
+[Normal]     }
+[Normal]     return result;
+[Normal] }
+[Normal] // 比较两个大数的大小
+[Normal] int cmpBigNum(BigNum a, BigNum b) {
+[Normal]     if (a.size != b.size) {
+[Normal]         return a.size > b.size ? 1 : -1;
+[Normal]     }
+[Normal]     for (int i = a.size - 1; i >= 0; i--) {
+[Normal]         if (a.digits[i] != b.digits[i]) {
+[Normal]             return a.digits[i] > b.digits[i] ? 1 : -1;
+[Normal]         }
+[Normal]     }
+[Normal]     return 0;
+[Normal] }
+[Normal] 然后在prime.c中修改isPrime函数：
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n) {
+[Normal]     // 这只是一个简单的实现，实际的素数判断需要使用更复杂的算法
+[Normal]     if (n.size == 1 && n.digits[0] < 2) {
+[Normal]         return 0; // 0和1不是素数
+[Normal]     }
+[Normal]     for (int i = 2; cmpBigNum(mulBigNum(intToBigNum(i), intToBigNum(i)), n) <= 0; i++) {
+[Normal]         if (modBigNum(n, intToBigNum(i)).digits[0] == 0) {
+[Normal]             return 0; // 可以被整除，不是素数
+[Normal]         }
+[Normal]     }
+[Normal]     return 1; // 是素数
+[Normal] }
+[Normal] 这只是一个基本的实现，实际的素数判断可能需要处理更多的边界情况，并且需要优化以提高效率。
+[Normal] 【说明】：我们发现上述判断素数的代码还是有bug，当然，如果这里看不出来，只能依靠后续的测试来发现。
+[Normal] 因为如果我们仅仅说它的算法错了，它可能难以明白哪里错了，所以我们明确告诉它哪里错了，我们继续提问如下：
+[Normal] 【提问6】：在进行n对i取余操作时，不应该只判断结果的个位是否为0，如果取余的结果等于10，那么你会认为它被整除了。
+[Normal] 【回复6】：你是对的，我犯了一个错误。在判断一个大数是否可以被另一个数整除时，我们应该检查整个大数是否为0，而不仅仅是检查个位。我们可以在大数模块中添加一个函数，用于检查一个大数是否为0。
+[Normal] 以下是在bignum.h中增加的函数声明：
+[Normal] // 检查大数是否为0，如果为0返回1，否则返回0
+[Normal] int isZero(BigNum a);
+[Normal] 以下是在bignum.c中增加的函数实现：
+[Normal] // 检查大数是否为0
+[Normal] int isZero(BigNum a) {
+[Normal]     for (int i = 0; i < a.size; i++) {
+[Normal]         if (a.digits[i] != 0) {
+[Normal]             return 0;
+[Normal]         }
+[Normal]     }
+[Normal]     return 1;
+[Normal] }
+[Normal] 然后在prime.c中修改isPrime函数：
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n) {
+[Normal]     // 这只是一个简单的实现，实际的素数判断需要使用更复杂的算法
+[Normal]     if (isZero(n) || (n.size == 1 && n.digits[0] == 1)) {
+[Normal]         return 0; // 0和1不是素数
+[Normal]     }
+[Normal]     for (int i = 2; cmpBigNum(mulBigNum(intToBigNum(i), intToBigNum(i)), n) <= 0; i++) {
+[Normal]         if (isZero(modBigNum(n, intToBigNum(i)))) {
+[Normal]             return 0; // 可以被整除，不是素数
+[Normal]         }
+[Normal]     }
+[Normal]     return 1; // 是素数
+[Normal] }
+[Normal] 这只是一个基本的实现，实际的素数判断可能需要处理更多的边界情况，并且需要优化以提高效率。
+[Normal] 【说明】：isPrime中for循环变量i还不是大数，我们继续提问：
+[Normal] 【提问7】：请将i从int类型改为大数。
+[Normal] 【回复7】：将i从int类型改为BigNum类型后，我们需要使用大数的加法来增加i的值，而不是直接使用++操作符。以下是修改后的代码：
+[Normal] // 判断大数是否为素数
+[Normal] int isPrime(BigNum n) {
+[Normal]     // 这只是一个简单的实现，实际的素数判断需要使用更复杂的算法
+[Normal]     if (isZero(n) || (n.size == 1 && n.digits[0] == 1)) {
+[Normal]         return 0; // 0和1不是素数
+[Normal]     }
+[Normal]     for (BigNum i = intToBigNum(2); cmpBigNum(mulBigNum(i, i), n) <= 0; i = addBigNum(i, intToBigNum(1))) {
+[Normal]         if (isZero(modBigNum(n, i))) {
+[Normal]             return 0; // 可以被整除，不是素数
+[Normal]         }
+[Normal]     }
+[Normal]     return 1; // 是素数
+[Normal] }
+[Normal] 在这里，addBigNum(i, intToBigNum(1))用于将i的值增加1。注意我们需要将1转换为大数，然后使用大数的加法来进行运算。
+[Normal] 【说明】：现在看起来算法已经符合我们的需要。我们在bignum.h和bignum.cpp中添加三个函数：
+[Normal] BigNum intToBigNum(int n);
+[Normal] int cmpBigNum(BigNum a, BigNum b);
+[Normal] int isZero(BigNum a);
+[Normal] 然后再在项目中添加两个文件：prime.h，里面有一个函数isPrime的声明，以及prime.cpp，里面包含isPrime的函数定义。
+[Normal] 下面继续实现其它模块。
+[Normal] （此处省略n字）
+[Heading 2] 3.5、使用示例
+[Normal] 根据用户界面，选择菜单的功能，逐一演示。将运行结果截图，加上小标题，让读者很清晰看明白是哪个功能。
+[Heading 2] 3.6、测试与调试
+[Heading 3] 3.6.1 bignum大数模块测试
+[Normal] 1）测试intToBigNum和printBigNum
+[Normal] 之所以将这两个一起测试，是因为我们要将一个整数转换成bignum，然后要输出看看是否正确。
+[Normal] 我们可以使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     int num;
+[Normal] 	BigNum bn;
+[Normal]     scanf("%d", &num);
+[Normal]     bn = intToBigNum(num);
+[Normal] 	printBigNum(bn);
+[Normal] 	return 0;
+[Normal] }
+[Normal] 由于我们的大数只能存储非负数，所以我们测试以下数据：
+[Normal] 表5  测试用例设计
+[Normal] 从测试结果来看，输入0时程序有bug，需要修改一下。
+[Normal] 我们先尝试用Copilot修改。
+[Normal] 【提问1】我们在代码编辑窗口选择intToBigNum函数的所有代码，然后在聊天窗口输入“/fix”（这个指令就是请求修复bug，也可以使用自然语言描述需求）。回复如下：
+[Normal] 【回复1】：您选择的代码段看起来没有明显的错误，但是它没有处理负数和零的情况。如果输入是负数或零，这个函数将不会按预期工作。让我们修复这个问题。
+[Normal] 以下是修复后的代码：
+[Normal] BigNum intToBigNum(int n) {
+[Normal]     BigNum result;
+[Normal]     result.size = 0;
+[Normal]     if (n == 0) {
+[Normal]         result.digits[result.size++] = 0;
+[Normal]     } else {
+[Normal]         while (n > 0) {
+[Normal]             result.digits[result.size++] = n % 10;
+[Normal]             n /= 10;
+[Normal]         }
+[Normal]     }
+[Normal]     return result;
+[Normal] }
+[Normal] 在这个修复中，我添加了一个检查来处理n为0的情况。如果n为0，我们将直接将0添加到结果的digits数组中，并将size设为1。对于负数，由于我们的BigNum结构体可能无法处理负数，所以这个函数可能需要在调用时确保输入是非负的。
+[Normal] 按照以上方法修复，然后再进行表1的测试，全部通过。
+[Normal] 2）测试strToBigNum
+[Normal] 我们使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     char num[20];
+[Normal] 	BigNum bn;
+[Normal]     scanf("%s", num);
+[Normal]     bn = strToBigNum(num);
+[Normal] 	printBigNum(bn);
+[Normal] 	return 0;
+[Normal] }
+[Normal] 由于我们的大数只能存储非负数，所以我们测试以下数据：
+[Normal] 表6  测试用例设计
+[Normal] 从测试结果来看，全部成功。
+[Normal] 3）测试判0isZero
+[Normal] 我们使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     char num[20];
+[Normal] 	BigNum bn;
+[Normal]     scanf("%s", num);
+[Normal]     bn = strToBigNum(num);
+[Normal]     printf("%d",isZero(bn));
+[Normal] 	return 0;
+[Normal] }
+[Normal] 我们进行以下测试：
+[Normal] 表7  测试用例设计
+[Normal] 4）测试比较cmpBigNum
+[Normal] 我们使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     char num1[20],num2[20];
+[Normal] 	BigNum bn;
+[Normal]     scanf("%s%s", num1, num2);
+[Normal]     printf("%d",cmpBigNum(strToBigNum(num1), strToBigNum(num2)));
+[Normal] 	return 0;
+[Normal] }
+[Normal] 我们进行以下测试：
+[Normal] 表8  测试用例设计
+[Normal] 5）测试加法addBigNum
+[Normal] 我们使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     char num1[20],num2[20];
+[Normal] 	BigNum bn;
+[Normal]     scanf("%s%s", num1, num2);
+[Normal]     bn = addBigNum(strToBigNum(num1), strToBigNum(num2));
+[Normal] 	printBigNum(bn);
+[Normal] 	return 0;
+[Normal] }
+[Normal] 我们进行以下测试：
+[Normal] 表9  测试用例设计
+[Normal] 6）测试减法subBigNum
+[Normal] 我们使用以下main函数进行测试：
+[Normal] int main()
+[Normal] {
+[Normal]     char num1[20],num2[20];
+[Normal] 	BigNum bn;
+[Normal]     scanf("%s%s", num1, num2);
+[Normal]     bn = subBigNum(strToBigNum(num1), strToBigNum(num2));
+[Normal] 	printBigNum(bn);
+[Normal] 	return 0;
+[Normal] }
+[Normal] 由于我们只能保存非负数，因此我们做减法时，得到的结果也是非负数，我们进行以下测试：
+[Normal] 表10  测试用例设计
+[Normal] 以上测试用例中，用例4和用例5，在输出结果中多了前导0，虽然这个前导0看起来不影响结果，但是和别的算法结合起来，就会发生错误。比如，在比较大小的函数中，有算法：
+[Normal] int cmpBigNum(BigNum a, BigNum b) {
+[Normal]     if (a.size != b.size) {
+[Normal]         return a.size > b.size ? 1 : -1;
+[Normal]     }
+[Normal] ……
+[Normal] }
+[Normal] 这个地方先判断a和b的位数，认为位数多的就大一些，如果一个大数有前导0，会导致这个比较发生错误。所以，如果我们在这里允许前导0存在，那么，在测试cmpBigNum的时候，就要用包含前导0的数据进行测试，这样就能发现那个函数需要修改。
+[Normal] 而我们认为大数不包含前导0，那么，这里的用例4和用例5就需要认为是测试失败，因此需要修改程序。
+[Normal] 我们向Copilot请求修复。首先在代码编辑窗口，选择subBigNum的全部代码，然后提问：
+[Normal] 【提问2】：在a减b时，由于借位，导致高位留下了0，请将高位的前导0删除。
+[Normal] 【回复2】：您可以在subBigNum函数的末尾添加一段代码来删除结果中的前导零。这段代码将从结果的最高位开始，检查每一位是否为零，如果是，则将结果的大小减一。这将继续进行，直到遇到一个非零位或者结果的大小变为零。
+[Normal] 以下是修改后的subBigNum函数：
+[Normal] BigNum subBigNum(BigNum a, BigNum b) {
+[Normal]     BigNum result;
+[Normal]     int borrow = 0;
+[Normal]     int i;
+[Normal]     for (i = 0; i < a.size || i < b.size; i++) {
+[Normal]         int diff = a.digits[i] - borrow;
+[Normal]         if (i < b.size) diff -= b.digits[i];
+[Normal]         if (diff < 0) {
+[Normal]             diff += 10;
+[Normal]             borrow = 1;
+[Normal]         }
+[Normal]         else {
+[Normal]             borrow = 0;
+[Normal]         }
+[Normal]         result.digits[i] = diff;
+[Normal]     }
+[Normal]     // 删除前导零
+[Normal]     while (i > 1 && result.digits[i - 1] == 0) {
+[Normal]         i--;
+[Normal]     }
+[Normal]     result.size = i;
+[Normal]     return result;
+[Normal] }
+[Normal] 这段代码将确保结果中不会有前导零。
+[Normal] 【说明】：以上代码中的加阴影的三行是新增加的代码。修改后，再对表6全部测试一遍，得到表7的结果
+[Normal] 表11  测试用例设计
+[Normal] 现在的结果全部正确。
+[Normal] 注意，修改代码后，一定要全部测试一遍，而不是只测试原来失败的用例。
+[Normal] （以下省略n字）
+[Heading 1] 4 体会与感想
+[Normal] 下列仅供参考（请根据内容填写）
+[Normal] 经过。。。，对我的编程能力有了一定的提高。所以这的实验相对来说完成的稍微快一些。对于书上算法的实现，也有了一定的效率的提高。由于线索二叉树的复杂，在其的初始化以及线索化上，都花费了一些时间。最后还是参考了书以及其他人的程序，才得以实现。今后，要提高编程的速度，同时在完成基本任务的情况下，也可以尝试着做一下老师布置的较高要求。
+
+=== TABLES (count: 12) ===
+
+Table 0: 6 rows x 3 cols
+  Row 0: ['姓名', '学号', '贡献度']
+  Row 1: ['张三', '060******', '1.1']
+  Row 2: ['李四', '……', '1']
+  Row 3: ['钱五', '……', '0.95']
+  Row 4: ['王六', '……', '0.95']
+  Row 5: ['', '（总计）', '4']
+
+Table 1: 11 rows x 3 cols
+  Row 0: ['任务序号', '任务名称', '完成情况']
+  Row 1: ['1', '基本功能----线路信息输入', '√']
+  Row 2: ['2', '基本功能----换乘站信息输入', '√']
+  Row 3: ['3', '基本功能----线路信息修改', '√']
+  Row 4: ['4', '基本功能----线路查询功能', '√']
+  Row 5: ['', '基本功能----路线查询功能', '√']
+  Row 6: ['', '基本功能----用户界面', '√']
+  Row 7: ['', '进阶功能----时间权重设置', '×']
+  Row 8: ['', '进阶功能----多条件路线查询', '×']
+  Row 9: ['', '进阶功能----线路和换乘信息的存储与读取', '×']
+  Row 10: ['', '进阶功能----用户界面增强', '×']
+
+Table 2: 2 rows x 4 cols
+  Row 0: ['轮次', '提问', '回复', '思考及行动']
+  Row 1: ['1', '描述问题，提醒不要使用int类型编程，要求先设计功能模块及调用关系。', '项目包含四个模块，并描述了调用关系', '画出了模块及调用关系图']
+
+Table 3: 5 rows x 4 cols
+  Row 0: ['轮次', '提问', '回复', '思考及行动']
+  Row 1: ['1', '要求将两个模块合并为一个大数模块，并实现其中的算法。', '提供了一个头文件和一个源程序文件，并实现了加法运算的代码', '理解加法的算法，画出流程图，并要求继续实现其它运算']
+  Row 2: ['2', '要求完成其它4个函数的实现', '提供了4个函数的代码', '在VS中创建头文件和源文件']
+  Row 3: ['3', '完成素数模块', '提供了头文件和源文件', '代码中for循环有错误，要求修改']
+  Row 4: ['4', '…', '…', '…']
+
+Table 4: 4 rows x 4 cols
+  Row 0: ['轮次', '提问', '回复', '思考及行动']
+  Row 1: ['1', '整数0转换为大数0测试失败，要求修复bug', '修改了bug', '按照表1测试，成功']
+  Row 2: ['2', '减法时由于借位导致遗留前导0，要求修改代码删除前导0', '修改了bug', '按照表6测试，成功']
+  Row 3: ['3', '…', '…', '…']
+
+Table 5: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0', '输入0', '输出0', '无输出', '失败']
+  Row 2: ['2', '测试1位数', '输入1', '输出1', '输出1', '成功']
+  Row 3: ['3', '测试2位数', '输入10', '输出10', '输出10', '成功']
+  Row 4: ['4', '测试3位数', '输入123', '输出123', '输出123', '成功']
+  Row 5: ['5', '测试多位数', '输入123456789', '输出123456789', '输出123456789', '成功']
+
+Table 6: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0', '输入0', '输出0', '输出0', '成功']
+  Row 2: ['2', '测试1位数', '输入1', '输出1', '输出1', '成功']
+  Row 3: ['3', '测试2位数', '输入10', '输出10', '输出10', '成功']
+  Row 4: ['4', '测试3位数', '输入123', '输出123', '输出123', '成功']
+  Row 5: ['5', '测试多位数', '输入12345678901234567', '输出12345678901234567', '输出12345678901234567', '成功']
+
+Table 7: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0', '输入0', '输出1', '输出1', '成功']
+  Row 2: ['2', '测试非0的1位数', '输入1', '输出0', '输出0', '成功']
+  Row 3: ['3', '测试尾数为0', '输入10', '输出0', '输出0', '成功']
+  Row 4: ['4', '测试包含0', '输入103', '输出0', '输出0', '成功']
+  Row 5: ['5', '测试前导0', '输入001', '输出0', '输出0', '成功']
+
+Table 8: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试1位数小于', '输入0和1', '输出-1', '输出-1', '成功']
+  Row 2: ['2', '测试1位数大于', '输入1和0', '输出1', '输出1', '成功']
+  Row 3: ['3', '测试1位数等于', '输入8和8', '输出0', '输出0', '成功']
+  Row 4: ['4', '测试位数不同', '输入103和99', '输出1', '输出1', '成功']
+  Row 5: ['5', '测试位数不同', '输入99和1111', '输出-1', '输出-1', '成功']
+
+Table 9: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0相加', '输入0和0', '输出0', '输出0', '成功']
+  Row 2: ['2', '测试1位数加1位数，无进位', '输入0和8', '输出8', '输出8', '成功']
+  Row 3: ['3', '测试1位数加1位数，有进位', '输入8和2', '输出10', '输出10', '成功']
+  Row 4: ['4', '测试多位数相加，无进位', '输入103和66', '输出169', '输出169', '成功']
+  Row 5: ['5', '测试多位数相加，所有位都进位', '输入999999999999和1', '输出1000000000000', '输出1000000000000', '成功']
+
+Table 10: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0相减', '输入0和0', '输出0', '输出0', '成功']
+  Row 2: ['2', '测试1位数加1位数，无借位', '输入8和6', '输出2', '输出2', '成功']
+  Row 3: ['3', '测试2位数减1位数，无借位', '输入18和2', '输出16', '输出16', '成功']
+  Row 4: ['4', '测试2位数减1位数，有借位', '输入13和9', '输出4', '输出04', '失败']
+  Row 5: ['5', '测试多位数减多位数，变成1位', '输入1000000000000和999999999999', '输出1', '输出0000000000001', '失败']
+
+Table 11: 6 rows x 6 cols
+  Row 0: ['序号', '测试目的', '输入数据', '期望结果', '实际结果', '结论']
+  Row 1: ['1', '测试0相减', '输入0和0', '输出0', '输出0', '成功']
+  Row 2: ['2', '测试1位数加1位数，无借位', '输入8和6', '输出2', '输出2', '成功']
+  Row 3: ['3', '测试2位数减1位数，无借位', '输入18和2', '输出16', '输出16', '成功']
+  Row 4: ['4', '测试2位数减1位数，有借位', '输入13和9', '输出4', '输出4', '成功']
+  Row 5: ['5', '测试多位数减多位数，变成1位', '输入1000000000000和999999999999', '输出1', '输出1', '成功']

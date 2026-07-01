@@ -58,32 +58,6 @@ int read_menu_choice(const std::string& prompt, int min_val, int max_val) {
 }
 
 // ---------------------------------------------------------------------------
-// read_int
-// ---------------------------------------------------------------------------
-
-int read_int(const std::string& prompt) {
-    while (true) {
-        std::cout << prompt;
-        std::cout.flush();
-
-        std::string line;
-        if (!std::getline(std::cin, line)) {
-            std::cout << "\n";
-            return 0;
-        }
-
-        line.erase(0, line.find_first_not_of(" \t\r\n"));
-        line.erase(line.find_last_not_of(" \t\r\n") + 1);
-
-        try {
-            return std::stoi(line);
-        } catch (...) {
-            std::cout << "[错误] 请输入整数\n";
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
 // read_yes_no
 // ---------------------------------------------------------------------------
 

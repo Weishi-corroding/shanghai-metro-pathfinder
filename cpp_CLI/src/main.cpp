@@ -47,6 +47,25 @@ void enable_utf8_console() {
 #endif
 }
 
+// 清屏 —— 进入/返回菜单时调用，使终端窗口"刷新"而非追加输出。
+// Windows 用 cls，其他平台用 ANSI 转义序列。
+void clear_screen() {
+#ifdef _WIN32
+    std::system("cls");
+#else
+    std::cout << "\033[2J\033[H" << std::flush;
+#endif
+}
+
+// 操作执行后停顿，让用户看清结果，再按回车清屏返回菜单。
+// 避免菜单循环立刻清掉刚打印的查询结果/路径方案。
+void pause_and_clear() {
+    std::cout << "\n按回车键返回菜单...";
+    std::string dummy;
+    std::getline(std::cin, dummy);
+    clear_screen();
+}
+
 // Read a trimmed line. Returns false on EOF.
 bool getline_trim(std::string& out) {
     if (!std::getline(std::cin, out)) return false;
@@ -305,6 +324,7 @@ void run_submenu_1(mini::StationManager& m,
                     const mini::Graph& g,
                     const fs::path& data_dir) {
     while (true) {
+        clear_screen();
         std::cout << "\n-- 线路站点信息/运营状态管理 --\n"
                   << "1. 从 CSV 文件批量更新站点开启/关闭状态\n"
                   << "2. 手工更新站点开启/关闭状态\n"
@@ -332,6 +352,7 @@ void run_submenu_1(mini::StationManager& m,
             }
             case 8: submenu_query(m); break;
         }
+        pause_and_clear();
     }
 }
 
@@ -361,6 +382,7 @@ void plan(const mini::StationManager& m, const mini::Graph& g,
 
 void run_submenu_2(const mini::StationManager& m, const mini::Graph& g) {
     while (true) {
+        clear_screen();
         std::cout << "\n-- 所需时间最短路径规划 --\n"
                   << "1. 单条所需时间最短路径\n"
                   << "2. 3 条所需时间最短路径\n"
@@ -368,11 +390,13 @@ void run_submenu_2(const mini::StationManager& m, const mini::Graph& g) {
         int c = prompt_int("请输入选项编号: ", 1, 3);
         if (c < 0 || c == 3) return;
         plan(m, g, /*by_time=*/true, c == 1 ? 1 : 3);
+        pause_and_clear();
     }
 }
 
 void run_submenu_3(const mini::StationManager& m, const mini::Graph& g) {
     while (true) {
+        clear_screen();
         std::cout << "\n-- 所需换乘次数最少路径规划 --\n"
                   << "1. 单条换乘次数最少路径\n"
                   << "2. 3 条换乘次数最少路径\n"
@@ -380,6 +404,7 @@ void run_submenu_3(const mini::StationManager& m, const mini::Graph& g) {
         int c = prompt_int("请输入选项编号: ", 1, 3);
         if (c < 0 || c == 3) return;
         plan(m, g, /*by_time=*/false, c == 1 ? 1 : 3);
+        pause_and_clear();
     }
 }
 
@@ -410,6 +435,7 @@ int main(int argc, char** argv) {
               << "      站点数: " << mgr.size()
               << "  图节点数: " << g.node_count()
               << "  边数: " << g.edge_count() << "\n";
+    pause_and_clear();
 
     while (true) {
         std::cout << "\n==== 地铁路径规划系统 ====\n"
@@ -427,5 +453,6 @@ int main(int argc, char** argv) {
             case 2: run_submenu_2(mgr, g); break;
             case 3: run_submenu_3(mgr, g); break;
         }
+        clear_screen();
     }
 }

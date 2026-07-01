@@ -103,11 +103,24 @@ int main() {
               "time=" + std::to_string(r.total_time));
     }
     {
-        auto r = pathfinder::dijkstra_shortest_time("0113", "0210", graph, mgr);
-        check("Dijkstra time: 人民广场(L1)->江苏路(L2) 1 transfer",
-              r.valid && r.transfer_count == 1 && r.total_time == 12,
+        // Cross-line trip from a NON-transfer origin: board L1 at 莘庄, switch to
+        // L2 at 人民广场, ride to 陆家嘴 — exactly one transfer. Starting *at* a
+        // transfer station boards the destination line directly (0 transfers);
+        // that boundary is covered separately below.
+        auto r = pathfinder::dijkstra_shortest_time("0101", "0210", graph, mgr);
+        check("Dijkstra time: 莘庄(L1)->陆家嘴(L2) 1 transfer",
+              r.valid && r.transfer_count == 1,
               "time=" + std::to_string(r.total_time)
               + " xfer=" + std::to_string(r.transfer_count));
+    }
+    {
+        // Transfer-station boundary: a passenger standing at 人民广场 boards L2
+        // directly to reach 陆家嘴 — walking to another platform before the first
+        // ride is initial boarding, not a transfer.
+        auto r = pathfinder::dijkstra_shortest_time("0113", "0210", graph, mgr);
+        check("Dijkstra time: 人民广场(transfer station)->陆家嘴 = 0 transfers",
+              r.valid && r.transfer_count == 0,
+              "xfer=" + std::to_string(r.transfer_count));
     }
     {
         auto r = pathfinder::dijkstra_shortest_time("0101", "0101", graph, mgr);
@@ -121,10 +134,17 @@ int main() {
               "time=" + std::to_string(r.total_time));
     }
     {
-        auto r = pathfinder::dijkstra_min_transfers("0113", "0210", graph, mgr);
-        check("Min transfers: 人民广场->江苏路 1 transfer",
+        auto r = pathfinder::dijkstra_min_transfers("0101", "0210", graph, mgr);
+        check("Min transfers: 莘庄->陆家嘴 1 transfer",
               r.valid && r.transfer_count == 1,
               "time=" + std::to_string(r.total_time));
+    }
+    {
+        // Transfer-station boundary (min-transfers): start at 人民广场 = 0 transfers.
+        auto r = pathfinder::dijkstra_min_transfers("0113", "0210", graph, mgr);
+        check("Min transfers: 人民广场(transfer station)->陆家嘴 = 0 transfers",
+              r.valid && r.transfer_count == 0,
+              "xfer=" + std::to_string(r.transfer_count));
     }
     {
         auto rs = pathfinder::yen_k_shortest_time("0101", "0113", graph, mgr, 3);

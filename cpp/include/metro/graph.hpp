@@ -1,10 +1,8 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
 #include <filesystem>
 
 namespace metro {
@@ -33,7 +31,6 @@ public:
 
     // --- I/O ---
     void load(const std::filesystem::path& csv_path);
-    void load_from_edges(const std::vector<Edge>& edges);
 
     // --- Traversal ---
     // Returns outgoing edges. When mgr is provided, filters edges whose
@@ -48,9 +45,6 @@ public:
     // --- Capacity ---
     size_t node_count() const noexcept { return adj_.size(); }
     size_t edge_count() const noexcept { return edge_count_; }
-
-    // --- All node IDs ---
-    std::unordered_set<std::string> all_ids() const;
 
     // --- Direct adjacency access (read-only, for network analysis) ---
     const std::unordered_map<std::string, std::vector<Edge>>& adj() const noexcept {
